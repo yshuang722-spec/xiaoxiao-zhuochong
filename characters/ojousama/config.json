@@ -1,0 +1,85 @@
+{
+  "pets": [
+    {
+      "id": "ojousama1",
+      "name": "橙毛大小姐",
+      "size": 462,
+      "balanceEnabled": true,
+      "whisperEnabled": false,
+      "workStatusEnabled": false,
+      "fixedEnabled": false,
+      "display": "desktop",
+      "position": {
+        "corner": "bottom-right",
+        "marginX": 24,
+        "marginY": 60
+      }
+    }
+  ],
+  "animations": {
+    "idle": [
+      "待机-翻书"
+    ],
+    "turn": [
+      "待机-翻书"
+    ],
+    "drag": [
+      "待机-翻书"
+    ],
+    "clicks": [
+      "待机-翻书",
+      "吐槽大肥鱼"
+    ],
+    "moves": {
+      "default": {
+        "minDist": 60,
+        "maxDist": 240,
+        "margin": 20,
+        "leadSec": 1,
+        "tailSec": 1
+      },
+      "actions": [
+        {
+          "name": "待机-翻书"
+        }
+      ]
+    },
+    "categories": [
+      {
+        "id": "小动作",
+        "weight": 70,
+        "actions": [
+          "待机-翻书",
+          "你号没了",
+          "剪刀手",
+          "钱多的烦恼",
+          "戴学士帽",
+          "查看发饰",
+          "变身Fable模型",
+          "优雅转圈",
+          "生气转身",
+          "吃蛋糕",
+          "优雅舞蹈",
+          "欢快舞蹈",
+          "旋转转圈舞"
+        ],
+        "noMirror": true
+      }
+    ],
+    "events": {
+      "balance": [
+        "待机-翻书",
+        "待机-翻书",
+        "待机-翻书",
+        "待机-翻书",
+        "待机-翻书",
+        "待机-翻书"
+      ]
+    }
+  },
+  "animationWeights": {
+    "idle": 20,
+    "turn": 5,
+    "move": 5
+  }
+}

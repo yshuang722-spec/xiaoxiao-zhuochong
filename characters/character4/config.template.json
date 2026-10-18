@@ -1,0 +1,72 @@
+{
+  "pets": [
+    {
+      "id": "character4",
+      "name": "白毛小龙娘",
+      "size": 462,
+      "balanceEnabled": false,
+      "whisperEnabled": false,
+      "workStatusEnabled": false,
+      "fixedEnabled": true,
+      "display": "none",
+      "position": {
+        "corner": "bottom-left",
+        "marginX": 24,
+        "marginY": 60
+      }
+    }
+  ],
+  "animations": {
+    "idle": [
+      "待机"
+    ],
+    "turn": [
+      "待机"
+    ],
+    "drag": [
+      "待机"
+    ],
+    "clicks": [
+      "待机"
+    ],
+    "moves": {
+      "default": {
+        "minDist": 60,
+        "maxDist": 240,
+        "margin": 20,
+        "leadSec": 1,
+        "tailSec": 1
+      },
+      "actions": [
+        {
+          "name": "待机"
+        }
+      ]
+    },
+    "categories": [
+      {
+        "id": "小动作",
+        "weight": 70,
+        "actions": [
+          "待机"
+        ],
+        "noMirror": false
+      }
+    ],
+    "events": {
+      "balance": [
+        "待机",
+        "待机",
+        "待机",
+        "待机",
+        "待机",
+        "待机"
+      ]
+    }
+  },
+  "animationWeights": {
+    "idle": 100,
+    "turn": 0,
+    "move": 0
+  }
+}

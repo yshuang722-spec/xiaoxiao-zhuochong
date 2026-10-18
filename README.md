@@ -6,9 +6,9 @@ Windows 桌面宠物客户端。解压即可使用，支持多个角色独立显
 
 ## 下载与启动
 
-**[下载 Windows 64 位解压即用版 v1.0.2](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/v1.0.2/%E5%B0%8F%E5%B0%8F%E6%A1%8C%E5%AE%A0-1.0.2-%E8%A7%A3%E5%8E%8B%E5%8D%B3%E7%94%A8%E7%89%88.zip)** · [查看所有版本](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases)
+**[下载 Windows 64 位解压即用版 v1.0.2](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/v1.0.2/xiaoxiao-zhuochong-1.0.2-win-x64-portable.zip)** · [查看所有版本](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases)
 
-1. 下载上面的“小小桌宠-1.0.2-解压即用版.zip”。
+1. 下载上面的“xiaoxiao-zhuochong-1.0.2-win-x64-portable.zip”。
 2. 右键压缩包，选择“全部解压”。
 3. 打开“小小桌宠”文件夹，双击 **小小桌宠.exe**。
 4. 在控制页开启想显示的角色，或点击“全部开启”。
@@ -39,16 +39,21 @@ Windows 桌面宠物客户端。解压即可使用，支持多个角色独立显
 
 “打开网站 / 查看余额”等菜单保持可见。余额、对话和碎碎念需要原 DSH 的账号、模型或宿主服务；独立运行时未预先连接，不影响桌宠显示和动画播放。
 
-## 版本验证
+## 开发与验证
 
-本仓库用于发布 Windows 解压即用版的下载文件和使用说明。
+本仓库同时保留改造后的源码。客户端位于 `client/`，引擎位于 `dsh-pet/`，角色初始包位于 `characters/`。
 
-v1.0.2 已完成本机 Windows 的首次启动、角色独立控制、托盘同步、关闭/退出验证；解压包经过 Windows .NET 完整解压及全部 682 个文件的逐项校验。
+进入 `dsh-pet/` 后运行 `npm install`、`npm run build` 可构建引擎。测试命令：引擎目录下 `npm test`，仓库根目录下 `node --test client/service.test.cjs`。
+
+Windows 打包脚本在 `tools/client-release/`，使用已有的 Electron、Node 和 NSIS 工具；完整构建后才具备运行目录，GitHub 自动生成的源码压缩包用于开发。
+
+本版本已完成本机 Windows 运行、首次启动、角色独立控制、托盘同步、关闭/退出验证；解压包通过 Windows .NET 完整解压及 682 个文件的逐项校验。尚未声称在所有 Windows 版本和硬件环境测试通过。
 
 ## 致谢与许可
 
 - 原作者：**PC2005-cloud**。
 - 原仓库：**https://github.com/PC2005-cloud/dsh-pet**。
-- 原项目采用 MIT 许可证，版权及全文见 [dsh-pet MIT 许可证](licenses/dsh-pet-MIT.txt)。
+- 原许可证：[MIT LICENSE](LICENSE)。
+- [上游项目说明快照](docs/UPSTREAM_README.md)。
 
 Electron、Node 和其他依赖的许可证随程序保留在对应目录中。

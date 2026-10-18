@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self' file:; style-src 'self'; script-src 'self'; connect-src 'none'"><title>小小桌宠</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<aside><div class="brand"><img src="assets/app.png" width="42" height="42" alt=""><span>小小桌宠</span></div><p class="aside-caption">让喜欢的角色<br>陪在桌面上。</p><nav><button class="nav-current" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v13H3zM8 21h8m-4-4v4"/></svg>我的角色</button></nav><div class="aside-bottom"><span class="connection-dot"></span><span id="connection">正在连接…</span></div></aside>
+<main>
+<header><div><h1>我的角色</h1><p>选择今天陪伴你的角色。</p></div><button id="import" class="primary"><span aria-hidden="true">＋</span> 添加角色</button></header>
+<div class="toolbar"><span id="summary">正在读取角色…</span><div><button id="refresh" class="quiet">刷新列表</button><button id="show-all" class="quiet">全部开启</button><button id="hide-all" class="quiet">全部隐藏</button></div></div>
+<div id="feedback" role="status" aria-live="polite"></div>
+<section id="characters" aria-label="角色列表"><p class="loading">正在准备角色…</p></section>
+<details class="import-help"><summary>如何添加新角色？</summary><p>选择包含 <code>config.json</code> 和 <code>animations</code> 文件夹的角色项目。每个角色使用独立的 id 和动画文件；导入后默认隐藏，可随时开启。</p></details>
+<footer><span>关闭控制页后，宠物会继续运行。可从系统托盘重新打开。</span><button id="quit" class="quiet">退出全部桌宠</button></footer>
+</main><script src="renderer.js"></script></body></html>
