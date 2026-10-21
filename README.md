@@ -6,19 +6,13 @@ Windows 桌面宠物客户端。解压即可使用，支持多个角色独立显
 
 ## 下载与启动
 
-**当前版本：v1.0.3** · [下载 v1.0.2 → v1.0.3 更新包](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/v1.0.3/xiaoxiao-zhuochong-1.0.3-update-from-1.0.2.zip) · [更新内容与操作](docs/UPDATE-1.0.3.md)
+**当前版本：v1.0.3**
 
-新用户先下载基础包，再应用更新包。已下载v1.0.2的用户只需本次更新包。
+**[下载 Windows 64 位完整客户端（解压即用）](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/latest/download/xiaoxiao-zhuochong-win-x64-portable.zip)**
 
-**[下载 Windows 64 位解压即用基础包 v1.0.2](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/v1.0.2/xiaoxiao-zhuochong-1.0.2-win-x64-portable.zip)** · [查看所有版本](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases)
+新用户只下载这个完整包，右键“全部解压”，进入“小小桌宠”文件夹，双击 **小小桌宠.exe**，然后在控制页开启角色。已包含运行环境和角色素材，无需安装Node、npm或Python。不要只移动一个EXE。
 
-1. 下载上面的“xiaoxiao-zhuochong-1.0.2-win-x64-portable.zip”。
-2. 右键压缩包，选择“全部解压”。
-3. 完整解压v1.0.3更新包，双击`update.cmd`，选择刚解压的基础程序文件夹。
-4. 更新完成后打开“小小桌宠”文件夹，双击 **小小桌宠.exe**。
-5. 在控制页开启想显示的角色，或点击“全部开启”。
-
-已包含运行环境和角色素材，无需另外安装 Node、npm 或 Python。请保留完整的程序目录。
+已有v1.0.2的用户：[下载单独更新包](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/v1.0.3/xiaoxiao-zhuochong-1.0.3-update-from-1.0.2.zip)，完整解压后双击 **update.cmd**，选择**原程序的小小桌宠.exe所在文件夹**，等“更新完成”后用原快捷方式启动。[逐步更新说明与常见问题](docs/UPDATE-1.0.3.md)。
 
 ## 可以做什么
 
@@ -53,7 +47,7 @@ Windows 桌面宠物客户端。解压即可使用，支持多个角色独立显
 
 Windows 打包脚本在 `tools/client-release/`，使用已有的 Electron、Node 和 NSIS 工具；完整构建后才具备运行目录，GitHub 自动生成的源码压缩包用于开发。
 
-本版本已完成本机 Windows 运行、首次启动、角色独立控制、托盘同步、关闭/退出验证；解压包通过 Windows .NET 完整解压及 682 个文件的逐项校验。尚未声称在所有 Windows 版本和硬件环境测试通过。
+本版本已完成本机 Windows 运行、首次启动、角色独立控制、托盘同步、关闭/退出验证；v1.0.3完整包通过696个文件的归档校验。尚未声称在所有 Windows 版本和硬件环境测试通过。
 
 ## 致谢与许可
 

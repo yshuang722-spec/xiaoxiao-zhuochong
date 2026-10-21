@@ -43,25 +43,7 @@ manifest={'version':'1.0.3','from':['1.0.2','1.0.3'],'baseCommit':args.base_ref,
 # Windows PowerShell 5.1 needs a BOM for Chinese source strings.
 (PACKAGE/'update.ps1').write_text(Path(__file__).with_name('update.ps1').read_text(encoding='utf-8-sig'),encoding='utf-8-sig')
 (PACKAGE/'update.cmd').write_bytes(b'@echo off\r\npowershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0update.ps1"\r\nset "UPDATE_RESULT=%ERRORLEVEL%"\r\npause\r\nexit /b %UPDATE_RESULT%\r\n')
-readme='''小小桌宠 v1.0.3 更新包（Windows，适用于v1.0.2）
-
-1. 完整解压本更新包。不要直接在压缩包里运行。
-2. 双击 update.cmd，选择你正在使用的“小小桌宠.exe”所在文件夹。
-3. 更新器核验文件并正常退出这份客户端，备份后更新程序和角色。
-4. 显示“更新完成”后，用原来的快捷方式启动。更新包文件夹可以另行保留。
-
-本次：补齐大小姐16段、黄毛7段；加入白毛小龙娘8段；加入跨角色碰撞、4:3画幅显示适配和播放出错恢复。黑毛小狐狸不包含、不修改；蓝毛角色素材保持原样。
-保持输入素材的现有速度。大小姐送情书对齐待机首帧，保留信封特写。
-
-无需重新下载Electron/Node和完整客户端，也不需要安装Python或npm。更新包仍包含这三位的完整官方动作，避免旧角色目录缺文件。
-已有角色的位置、大小、显示设置和自定义动作保留。相同官方文件名会更新到本版本；官方动画池更新后合并自定义动作。新增白毛默认隐藏，在控制页开启。
-不卸载任何程序、不删除其他角色、不修改开机启动项、不强制结束进程。更新目标文件与已知v1.0.2/本版本不匹配时停止，适用于标准发行版，不用于覆盖开发版。
-备份位置：%LOCALAPPDATA%\\XiaoXiaoZhuoChong\\UpdateBackups。写入失败会自动恢复已替换文件；如仍提示失败，请保留备份和错误信息。
-使用了自定义DSH_HOME时，须在相同环境启动更新器，或从PowerShell调用update.ps1 -ProgramDir 程序目录 -DataHome 数据目录。
-
-原作者：PC2005-cloud；原仓库：https://github.com/PC2005-cloud/dsh-pet
-本项目：https://github.com/yshuang722-spec/xiaoxiao-zhuochong
-'''
+readme=Path(__file__).with_name('README-update.txt').read_text(encoding='utf-8')
 (PACKAGE/'使用说明.txt').write_text(readme,encoding='utf-8-sig')
 archive=OUT/'xiaoxiao-zhuochong-1.0.3-update-from-1.0.2.zip'
 with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,compresslevel=5) as z:

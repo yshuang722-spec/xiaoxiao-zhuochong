@@ -1,1 +1,2 @@
-4089022d822a4bf784670a17c6cc6759084b8fa82a0c88dc128c0323692f77e7  xiaoxiao-zhuochong-1.0.2-win-x64-portable.zip
+d9347fcee158de221ae9606e87bac3bd717a965cac3d2e8e98bd12f848264232  xiaoxiao-zhuochong-win-x64-portable.zip
+40f81307da1db095d0ecb80df886984f4f1084750e236bd378a9481d185c160c  xiaoxiao-zhuochong-1.0.3-update-from-1.0.2.zip

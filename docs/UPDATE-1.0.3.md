@@ -11,19 +11,28 @@
 
 **黑毛小狐狸不在本次发布中**，不会复制或删除其用户数据。蓝毛小女仆素材保持v1.0.2原样，公用播放器和碰撞代码随版本升级。没有合入开发中的完整角色日志系统或其他未列明的开发进度。
 
-## 已下载v1.0.2的用户
+## 新用户：直接使用完整版
 
-下载本次Release的`xiaoxiao-zhuochong-1.0.3-update-from-1.0.2.zip`，完整解压，双击`update.cmd`，选择**原程序的小小桌宠.exe所在文件夹**。
+[下载v1.0.3完整客户端](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/latest/download/xiaoxiao-zhuochong-win-x64-portable.zip)，全部解压，进入“小小桌宠”文件夹，双击“小小桌宠.exe”。无需旧版本或更新包。GitHub的Source code压缩包是开发源码，不是运行包。
 
-更新器校验文件、正常退出所选客户端、备份并更新。完成后继续用原快捷方式启动。无需重新下载Electron/Node或整个客户端；无需安装Python/npm。
+[下载老用户更新包](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/v1.0.3/xiaoxiao-zhuochong-1.0.3-update-from-1.0.2.zip)
 
-三个角色的官方同名文件会替换到本版本；保留已有角色的位置、大小、显示状态和自定义动作。旧白毛空模板也能升级。新增白毛默认隐藏，请在控制页开启。自定义`DSH_HOME`可通过`update.ps1 -ProgramDir 路径 -DataHome 路径`指定。
+## 已有v1.0.2：使用更新包
 
-更新器仅接受已知v1.0.2或本更新包文件；遇到其他开发版本会停止。写入失败自动回滚。备份位于`%LOCALAPPDATA%\XiaoXiaoZhuoChong\UpdateBackups`。更新包包含三位的完整官方动作，防止用户旧目录缺素材，所以并非只有几KB的小补丁。
+1. 下载 `xiaoxiao-zhuochong-1.0.3-update-from-1.0.2.zip`，右键选择“全部解压”。不要在压缩包里面直接运行。
+2. 从托盘菜单选择“退出全部桌宠”。只点控制页右上角的 × 会隐藏窗口，程序仍在运行；更新器也会尝试正常退出所选客户端。
+3. 打开解压后的 `xiaoxiao-zhuochong-1.0.3-update` 文件夹，确认有 `update.cmd`、`update.ps1`、`manifest.json` 和 `payload` 文件夹。双击 **update.cmd**。
+4. 在弹出的文件夹选择框中，选择**原来使用的“小小桌宠.exe”所在文件夹**，然后确认。可以先右键原桌面快捷方式 →“打开文件所在的位置”找到它。正确目录里应同时有“小小桌宠.exe”、`resources`、`runtimes`；选择文件夹本身，不是选择EXE文件。
+5. **不要选择更新包文件夹、角色数据目录（.dsh），也不要笼统选择桌面。** 等待窗口显示“更新完成”；期间不要移动程序文件、关闭更新窗口或再次启动桌宠。
+6. 更新完成后，按提示关闭窗口，再双击**原来的快捷方式或原目录的小小桌宠.exe**启动。打开控制页检查动作；白毛小龙娘默认隐藏，需要手动开启。
 
-## 新用户
+不用重新下载完整客户端，也不用安装Python、Node或npm。这个更新包不能单独启动桌宠。
 
-先下载v1.0.2解压即用基础包，再运行本次更新包。GitHub自动生成的Source code压缩包是开发源码，不是含Electron/Node的运行包。
+更新器会备份并替换官方同名动画，更新官方动作列表；保留原角色的位置、大小、显示设置和自定义动作。备份在 `%LOCALAPPDATA%\XiaoXiaoZhuoChong\UpdateBackups`。写入失败会尝试自动回滚，请保留错误信息和备份。
+
+如果提示版本不匹配或找不到程序：停止操作，检查选择的是否是原v1.0.2发行版目录。不要把payload手工乱拷进其他目录。开发版不支持直接覆盖。如果更新成功却仍是旧版，检查启动的快捷方式是否指向刚更新的那一份程序。
+
+高级用法：自定义过DSH_HOME的用户，应在相同环境运行更新器，或调用 `update.ps1 -ProgramDir "程序目录" -DataHome "数据目录"`。
 
 ## 验证与边界
 
