@@ -8,6 +8,8 @@ if(!app.requestSingleInstanceLock()){app.quit();}else if(process.argv.includes('
  app.on('second-instance',(_event,argv)=>{if(argv.includes('--quit')){void quitAll();return;}if(window){window.show();if(window.isMinimized())window.restore();window.focus();}});
  app.whenReady().then(async()=>{
   try{await service.ensureServer();}catch(e){dialog.showErrorBox('桌宠启动失败',e.message);app.quit();return;}
+  const broker=require(path.join(service.PACKAGE,'runtime/electron-helper/collision-link.cjs')).startBroker();
+  await broker.ready;app.once('before-quit',()=>{void broker.close();});
   window=new BrowserWindow({width:1100,height:780,minWidth:800,minHeight:620,title:'小小桌宠',backgroundColor:'#faf8f4',autoHideMenuBar:true,show:false,icon:path.join(__dirname,'assets/app.ico'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   window.setMenu(null);window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   // Installer/uninstaller requests a normal shutdown before replacing program files.

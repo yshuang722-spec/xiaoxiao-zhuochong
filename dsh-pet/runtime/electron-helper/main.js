@@ -297,6 +297,17 @@ const lastRequestedBounds = new Map();
  * 任何更新都广播全量给所有窗口——每窗飞行方用它做跨窗碰撞检测（滞后 ≤ 1 帧，可接受）。
  */
 const petStates = new Map();
+const { connectRole } = require('./collision-link.cjs');
+const collisionLinks = new Map();
+function linkCollision(petId, win) {
+  const link = connectRole({ id: petId,
+    onHit: hit => { if (!win.isDestroyed()) win.webContents.send('pet:hit', hit); },
+  });
+  collisionLinks.set(petId, link);
+  win.once('closed', () => { link.close(); collisionLinks.delete(petId); });
+}
+
+
 
 /** 把当前全量宠物状态广播给所有窗口（碰撞检测的共享站场） */
 function broadcastPetStates() {
@@ -313,6 +324,8 @@ function broadcastPetStates() {
 function updatePetState(petId, partial) {
   const prev = petStates.get(petId) || { x: 0, y: 0, vx: 0, vy: 0, size: 0, bottomPad: 0 };
   petStates.set(petId, Object.assign({}, prev, partial));
+  const win=windows.get(petId);
+  collisionLinks.get(petId)?.publish({...petStates.get(petId),held:!!(win&&inputBusy.get(win.id))});
   broadcastPetStates();
 }
 
@@ -540,6 +553,7 @@ function createPetWindows() {
         win.destroy();
       });
     windows.set(pet.id, win);
+    linkCollision(pet.id,win);
   }
 }
 
@@ -714,6 +728,8 @@ app.whenReady().then(() => {
         bottomPad: Number.isFinite(bottomPad) && bottomPad > 0 ? bottomPad : petStates.get(petId)?.bottomPad || 0,
         vx: Number.isFinite(vx) ? vx : 0,
         vy: Number.isFinite(vy) ? vy : 0,
+        enabled: bounds.collisionEnabled===true,
+        flying: bounds.flying===true,
       });
     }
   });
@@ -768,6 +784,8 @@ app.whenReady().then(() => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win || win.isDestroyed()) return;
     inputBusy.set(win.id, !!busy);
+    const petId=[...windows.keys()].find(id=>windows.get(id)===win);
+    if(petId&&petStates.has(petId))updatePetState(petId,{});
   });
 
   ipcMain.on('pet:input-regions', (event, input) => {

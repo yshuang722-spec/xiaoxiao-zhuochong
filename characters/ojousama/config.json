@@ -8,7 +8,7 @@
       "whisperEnabled": false,
       "workStatusEnabled": false,
       "fixedEnabled": false,
-      "display": "desktop",
+      "display": "none",
       "position": {
         "corner": "bottom-right",
         "marginX": 24,
@@ -61,7 +61,8 @@
           "吃蛋糕",
           "优雅舞蹈",
           "欢快舞蹈",
-          "旋转转圈舞"
+          "旋转转圈舞",
+          "送情书"
         ],
         "noMirror": true
       }
@@ -81,5 +82,13 @@
     "idle": 20,
     "turn": 5,
     "move": 5
+  },
+  "physics": {
+    "gravity": 1400,
+    "restitution": 0.78,
+    "groundFriction": 2.5,
+    "ceilingBounce": true,
+    "throwPower": 1,
+    "petCollision": true
   }
 }

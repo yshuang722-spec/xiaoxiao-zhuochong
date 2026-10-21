@@ -5,7 +5,7 @@
 
 基于 PC2005-cloud 的 dsh-pet 改造：https://github.com/PC2005-cloud/dsh-pet 。保留上游 MIT LICENSE；新增角色、动画及图标由本项目作者创作。
 
-角色数据位于 %USERPROFILE%\.dsh\dsh-pet\characters，每个角色独立配置和动画目录。蓝毛小女仆(main)、橙毛大小姐(ojousama)、黄毛该溜子(character3)可用，白毛小龙娘(character4)为待添加模板。
+角色数据位于 %USERPROFILE%\.dsh\dsh-pet\characters，每个角色独立配置和动画目录。蓝毛小女仆(main)、橙毛大小姐(ojousama)、黄毛该溜子(character3)可用，白毛小龙娘(character4)已可用。
 完整客户端附带运行环境和初始角色包，首次启动不覆盖已有角色。请保留完整程序目录。
 
 “打开网站 / 查看余额”菜单保持可见。余额、碎碎念和对话在独立客户端中没有 DSH 模型和账号连接，会明确提示不可用；这次没有新增账号连接。

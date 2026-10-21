@@ -1,0 +1,7 @@
+const {fork}=require('node:child_process'),path=require('path'),assert=require('assert');
+const {startBroker,connectRole}=require('../../../dsh-pet/runtime/electron-helper/collision-link.cjs');
+const wait=fn=>new Promise((resolve,reject)=>{let n=0;const t=setInterval(()=>{if(fn()){clearInterval(t);resolve()}else if(n++>400){clearInterval(t);reject(Error('timeout'))}},10)});
+(async()=>{const home=path.join(__dirname,'process-test-'+Date.now()),server=startBroker({home});await server.ready;let hit=null,ready=false,childHit=null;
+const a=connectRole({id:'parent-role',home,onHit:h=>hit=h});const child=fork(path.join(__dirname,'peer.cjs'),[home],{windowsHide:true,stdio:['ignore','ignore','inherit','ipc']});
+child.on('message',m=>{if(m.ready)ready=true;if(m.hit)childHit=m.hit});
+try{await wait(()=>ready&&a.connected);const s={x:140,y:0,vx:0,vy:0,size:462,bottomPad:21,enabled:true,held:false,flying:false};child.send({state:s});await wait(()=>server.states.has('child-role'));a.publish({...s,x:0,vx:800,flying:true});await wait(()=>hit&&childHit);assert(childHit.vx>0);assert(hit.vx<800);child.send({close:true});await wait(()=>!server.states.has('child-role'));assert(a.connected);console.log('PASS: two separate OS processes receive reciprocal bounce; closing target removes collider without interrupting other role');}finally{a.close();if(child.connected)child.send({close:true});await server.close();}})().catch(e=>{console.error(e);process.exitCode=1});

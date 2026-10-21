@@ -53,7 +53,9 @@ class PetSprite {
     this.animations = pet.animations || cfg.animations;
     this.weights = pet.animationWeights || cfg.animationWeights;
     // 拖拽抛掷物理参数（顶层全局；拍平已吹入实例，兜底回全局/默认）
-    this.physics = pet.physics || config.physics || S.DEFAULT_PHYSICS;
+    this.physics = { ...(pet.physics || config.physics || S.DEFAULT_PHYSICS) };
+    // Enable the newly released feature for all four published roles; custom roles keep their own setting.
+    this.physics.petCollision = ['main', 'ojousama', 'character3', 'character4'].includes(this.assetRoot) || this.physics.petCollision === true;
     // 抛掷锁定在当前屏幕（根字段；拍平已吹入实例，兜底回主条目/默认）：
     // true = 甩出去只在松手时所在那块屏内弹（屏缝当墙），false = 照常跨屏飞行
     this.confineToScreen = pet.confineToScreen === true || config.confineToScreen === true;
@@ -236,14 +238,15 @@ class PetSprite {
         this.others = next;
       });
       window.petBridge.onPetHit((payload) => {
-        const vx = Number(payload && payload.vx);
-        const vy = Number(payload && payload.vy);
-        if (Number.isFinite(vx) && Number.isFinite(vy)) this.onDeskHit(toLocal(vx), toLocal(vy));
+        const vx=Number(payload?.vx),vy=Number(payload?.vy);
+        if(Number.isFinite(vx)&&Number.isFinite(vy))this.onDeskHit(toLocal(vx),toLocal(vy),toLocal(Number(payload.dx)||0),toLocal(Number(payload.dy)||0));
       });
     }
   }
 
   dispose() {
+    this.mediaGuard?.stop();
+    if(this.playbackGuard)window.clearInterval(this.playbackGuard);
     this.ac.abort();
     this.inputRegionMutation.disconnect();
     this.inputRegionResize.disconnect();
@@ -287,6 +290,8 @@ class PetSprite {
         toScreen(this.bottomPad),
         fly ? toScreen(fly.vx) : 0,
         fly ? toScreen(fly.vy) : 0,
+        !!this.physics.petCollision,
+        !!fly,
       );
     }
     // 位置变了（宠物漫游/拖拽/飞行，窗口跟着动）：提示若正显示必须重摆一次——它跟的是光标，
@@ -365,6 +370,28 @@ class PetSprite {
   }
 
   // 双缓冲切换（与浏览器同一套：前台 opacity 切换 + 降级视频清 handler 并停播，防残留 ended 雪崩）
+  recoverPlayback(reason) {
+    this.mediaGuard?.stop();
+    this.pending = null;
+    this.assetRevision = Date.now();
+    this.playbackRecoveries = (this.playbackRecoveries || 0) + 1;
+    this.lastPlaybackRecovery = { reason, at: Date.now(), animation: this.anim };
+    this.logRuntime?.('播放恢复', { reason, recoveries:this.playbackRecoveries });
+    const idle=this.animations.idle.find(name=>name!==this.anim)||this.animations.idle[0];
+    if(idle)window.setTimeout(()=>this.playOnce(idle),0);
+  }
+
+  watchPlayback(video,gen) {
+    this.mediaGuard?.stop();
+    this.mediaGuard=window.PetPlaybackGuard.watch(video,{
+      isCurrent:()=>gen===this.gen,
+      isBlocked:()=>this.dragState.active||this.menuOpen||this.chatOpen||this.workOn||!!this.pending,
+      isOnce:()=>this.once,
+      onFailure:reason=>this.recoverPlayback(reason),
+      onEnded:()=>this.handleEnded(),
+    });
+  }
+
   switchTo(next, nextOnce) {
     if (!next) return;
     const pending = this.pending;
@@ -382,7 +409,7 @@ class PetSprite {
     const target = this.front === 0 ? this.videoB : this.videoA;
     const el = target;
     if (!el) return;
-    el.src = this.assetBase + encodeURIComponent(next) + (S.ANIMATION_EXT || '.webm');
+    el.src = this.assetBase + encodeURIComponent(next) + (S.ANIMATION_EXT || '.webm') + ('?v='+(this.assetRevision??=Date.now()));
     el.loop = !nextOnce;
     el.muted = true;
     el.autoplay = true;
@@ -395,6 +422,7 @@ class PetSprite {
       if (!this.pending || this.pending.gen !== gen) return;
       this.pending = null;
       console.warn('[dsh-pet] 素材加载失败 pet=' + this.pet.id + ' anim=' + next + '：' + why + '（已释放本次切换）');
+      this.recoverPlayback(why);
     };
     const loadTimer = window.setTimeout(() => loadGuard('10s 超时'), 10000);
     el.onerror = () => {
@@ -406,7 +434,9 @@ class PetSprite {
       el.removeEventListener('loadeddata', onReady);
       window.clearTimeout(loadTimer);
       el.onerror = null;
+      if(gen!==this.gen)return;
       if (this.pending && this.pending.gen !== gen) return;
+      window.PetCanvasLayout?.apply(el, this.size, this.assetRoot);
       const old = this.front === 0 ? this.videoA : this.videoB;
       el.classList.add('is-front');
       if (old && old !== el) {
@@ -418,6 +448,7 @@ class PetSprite {
       this.pending = null;
       el.style.transform = this.facing === 'right' ? 'scaleX(-1)' : '';
       el.play().catch(() => {});
+      this.watchPlayback(el,gen);
       // 点击 Q 弹：等新动画就位后才压（压的是新点击动画的首帧，与浏览器一致）
       if (this.pendingSquash) {
         this.pendingSquash = false;
@@ -434,7 +465,7 @@ class PetSprite {
     // fading video layers makes the desktop briefly show through every cycle.
     // Keep other pets and interaction/movement playback on their original path.
     const continuousIdle =
-      ['ojousama', 'character3'].includes(this.assetRoot) &&
+      ['ojousama', 'character3', 'character4'].includes(this.assetRoot) &&
       !this.animations.categories.some((c) => c.id === '小动作' && c.actions.length > 1) &&
       this.animations.idle.length === 1 &&
       name === this.animations.idle[0] &&
@@ -461,7 +492,7 @@ class PetSprite {
     this.stopMove();
     const { animations, animationWeights } = { animations: this.animations, animationWeights: this.weights };
     const smallActions = animations.categories.find((c) => c.id === '小动作')?.actions;
-    if (['ojousama', 'character3'].includes(this.assetRoot) && smallActions?.length && !this.workOn) {
+    if (['ojousama', 'character3', 'character4'].includes(this.assetRoot) && smallActions?.length && !this.workOn) {
       // Rotate every small action, including the idle entry, without repeating
       // the same clip through a fade when the category contains only one item.
       const next = smallActions[(smallActions.indexOf(this.anim) + 1) % smallActions.length];
@@ -502,7 +533,7 @@ class PetSprite {
     const { animations } = { animations: this.animations };
     // Configured orange/yellow small actions resume their playlist after interaction.
     if (
-      ['ojousama', 'character3'].includes(this.assetRoot) &&
+      ['ojousama', 'character3', 'character4'].includes(this.assetRoot) &&
       !this.workOn &&
       animations.categories.some((c) => c.id === '小动作' && c.actions.length > 0)
     ) {
@@ -732,6 +763,8 @@ class PetSprite {
           vy: toScreen(state.vy),
           size: toScreen(this.size),
           bottomPad: toScreen(this.bottomPad),
+          enabled: !!this.physics.petCollision,
+          flying: true,
         });
         this.lastFlightReport = now;
       }
@@ -783,11 +816,12 @@ class PetSprite {
   }
 
   /** 被撞回调（跨窗碰撞 broker 转发）：停当前动作，从落点以新初速抛出去（全复用现有物理） */
-  onDeskHit(vx, vy) {
+  onDeskHit(vx, vy, dx=0, dy=0) {
+    if(this.dragState.active)return;
     this.stopMove();
     this.stopDragFollow();
     this.stopThrow();
-    this.startThrow(this.pos.x, this.pos.y, vx, vy);
+    this.startThrow(this.pos.x+dx, this.pos.y+dy, vx, vy);
   }
 
   /** Q 弹挤压：前台视频垂直压扁（贴地锚定，transform-origin:bottom）再回弹；
@@ -798,7 +832,7 @@ class PetSprite {
     const token = ++this.squashToken;
     if (this.squashRef !== null) cancelAnimationFrame(this.squashRef);
     const origin = el.style.transformOrigin;
-    el.style.transformOrigin = 'bottom';
+    el.style.transformOrigin = el.dataset?.canvasFootOrigin || 'bottom';
     const t0 = performance.now();
     const step = () => {
       if (this.squashToken !== token) return;

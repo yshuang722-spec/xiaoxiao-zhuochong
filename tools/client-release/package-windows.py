@@ -2,7 +2,7 @@ from pathlib import Path
 import json,os,shutil,subprocess,sys
 
 root=Path(__file__).resolve().parents[2]
-payload=root/'outputs/小小桌宠-1.0.2'
+payload=root/'outputs/小小桌宠-1.0.3'
 dist=root/'outputs/Windows安装包'
 work=root/'work/windows-installer'
 dist.mkdir(parents=True,exist_ok=True);work.mkdir(parents=True,exist_ok=True)
@@ -36,10 +36,10 @@ ShowUninstDetails nevershow
 BrandingText "小小桌宠 · 基于 PC2005-cloud/dsh-pet"
 Icon "@ICON@"
 UninstallIcon "@ICON@"
-VIProductVersion "1.0.2.0"
+VIProductVersion "1.0.3.0"
 VIAddVersionKey /LANG=2052 "ProductName" "小小桌宠"
 VIAddVersionKey /LANG=2052 "FileDescription" "小小桌宠 Windows 一键安装程序"
-VIAddVersionKey /LANG=2052 "FileVersion" "1.0.2"
+VIAddVersionKey /LANG=2052 "FileVersion" "1.0.3"
 VIAddVersionKey /LANG=2052 "LegalCopyright" "基于 PC2005-cloud 的 dsh-pet (MIT)"
 !define MUI_ABORTWARNING
 !define MUI_FINISHPAGE_TITLE "小小桌宠已安装完成"
@@ -105,7 +105,7 @@ Section "安装小小桌宠"
   CreateShortCut "$SMPROGRAMS\小小桌宠\卸载小小桌宠.lnk" "$INSTDIR\卸载小小桌宠.exe"
   WriteRegStr HKCU "Software\XiaoXiaoZhuoChong" "InstallDir" "$INSTDIR"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\XiaoXiaoZhuoChong" "DisplayName" "小小桌宠"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\XiaoXiaoZhuoChong" "DisplayVersion" "1.0.2"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\XiaoXiaoZhuoChong" "DisplayVersion" "1.0.3"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\XiaoXiaoZhuoChong" "InstallLocation" "$INSTDIR"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\XiaoXiaoZhuoChong" "UninstallString" '"$INSTDIR\卸载小小桌宠.exe"'
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\XiaoXiaoZhuoChong" "QuietUninstallString" '"$INSTDIR\卸载小小桌宠.exe" /S'
@@ -146,10 +146,10 @@ Section "Uninstall"
   RMDir "$INSTDIR"
 SectionEnd
 '''
-source=template.replace('@OUT@',esc(dist/'小小桌宠-1.0.2-安装版.exe')).replace('@ICON@',esc(payload/'resources/app/client/assets/app.ico')).replace('@PAYLOAD@',esc(payload)).replace('@OWNED@',owned).replace('@SIZE@',str(sum(p.stat().st_size for p in payload.rglob('*') if p.is_file())//1024))
+source=template.replace('@OUT@',esc(dist/'小小桌宠-1.0.3-安装版.exe')).replace('@ICON@',esc(payload/'resources/app/client/assets/app.ico')).replace('@PAYLOAD@',esc(payload)).replace('@OWNED@',owned).replace('@SIZE@',str(sum(p.stat().st_size for p in payload.rglob('*') if p.is_file())//1024))
 nsi=work/'installer.nsi';nsi.write_text(source,'utf-8-sig')
 manifest={str(p.relative_to(payload)):p.stat().st_size for p in payload.rglob('*') if p.is_file()}
 (work/'payload-files.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),'utf-8')
 print(str(nsi),flush=True)
 subprocess.run([str(compiler),'/V2',str(nsi)],check=True)
-print(str(dist/'小小桌宠-1.0.2-安装版.exe'),flush=True)
+print(str(dist/'小小桌宠-1.0.3-安装版.exe'),flush=True)

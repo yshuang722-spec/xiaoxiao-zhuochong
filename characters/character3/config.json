@@ -8,7 +8,7 @@
       "whisperEnabled": false,
       "workStatusEnabled": false,
       "fixedEnabled": true,
-      "display": "desktop",
+      "display": "none",
       "position": {
         "corner": "bottom-left",
         "marginX": 24,
@@ -27,7 +27,8 @@
       "叉腰嚣张"
     ],
     "clicks": [
-      "叉腰嚣张"
+      "叉腰嚣张",
+      "哈哈大笑"
     ],
     "moves": {
       "default": {
@@ -52,7 +53,8 @@
           "打电话",
           "左右观察",
           "转圈摔倒",
-          "下好片了"
+          "下好片了",
+          "小汽车"
         ],
         "noMirror": true
       }
@@ -72,5 +74,13 @@
     "idle": 100,
     "turn": 0,
     "move": 0
+  },
+  "physics": {
+    "gravity": 1400,
+    "restitution": 0.78,
+    "groundFriction": 2.5,
+    "ceilingBounce": true,
+    "throwPower": 1,
+    "petCollision": true
   }
 }

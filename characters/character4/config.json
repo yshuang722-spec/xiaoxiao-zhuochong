@@ -18,16 +18,17 @@
   ],
   "animations": {
     "idle": [
-      "待机"
+      "待机观望"
     ],
     "turn": [
-      "待机"
+      "待机观望"
     ],
     "drag": [
-      "待机"
+      "待机观望"
     ],
     "clicks": [
-      "待机"
+      "待机观望",
+      "傲娇表情"
     ],
     "moves": {
       "default": {
@@ -39,7 +40,7 @@
       },
       "actions": [
         {
-          "name": "待机"
+          "name": "待机观望"
         }
       ]
     },
@@ -48,19 +49,25 @@
         "id": "小动作",
         "weight": 70,
         "actions": [
-          "待机"
+          "待机观望",
+          "扑腾小翅膀",
+          "被大肥鱼骑",
+          "挥手打招呼",
+          "高兴飞起",
+          "提裙转圈",
+          "喷火冒烟"
         ],
         "noMirror": false
       }
     ],
     "events": {
       "balance": [
-        "待机",
-        "待机",
-        "待机",
-        "待机",
-        "待机",
-        "待机"
+        "待机观望",
+        "待机观望",
+        "待机观望",
+        "待机观望",
+        "待机观望",
+        "待机观望"
       ]
     }
   },
@@ -68,5 +75,13 @@
     "idle": 100,
     "turn": 0,
     "move": 0
+  },
+  "physics": {
+    "gravity": 1400,
+    "restitution": 0.78,
+    "groundFriction": 2.5,
+    "ceilingBounce": true,
+    "throwPower": 1,
+    "petCollision": true
   }
 }

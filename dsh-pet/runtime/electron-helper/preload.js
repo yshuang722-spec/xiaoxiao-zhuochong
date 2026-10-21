@@ -20,8 +20,8 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('petBridge', {
-  setBounds(x, y, width, height, boxX, boxY, size, bottomPad, vx, vy) {
-    ipcRenderer.send('pet:set-bounds', { x, y, width, height, boxX, boxY, size, bottomPad, vx, vy });
+  setBounds(x, y, width, height, boxX, boxY, size, bottomPad, vx, vy, collisionEnabled, flying) {
+    ipcRenderer.send('pet:set-bounds', { x, y, width, height, boxX, boxY, size, bottomPad, vx, vy, collisionEnabled, flying });
   },
   setInteractive(interactive) {
     ipcRenderer.send('pet:set-interactive', !!interactive);
