@@ -10,7 +10,14 @@ Windows 桌面宠物客户端，当前版本 **v1.0.4（2026-10-23）**。
 
 新用户：右键“全部解压”，打开“小小桌宠”文件夹，双击“小小桌宠.exe”。内含运行环境，不必安装 Node、npm 或 Python；不要只移动一个 EXE。
 
-**[v1.0.3 老用户下载更新包](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/v1.0.4/xiaoxiao-zhuochong-1.0.4-update-from-1.0.3.zip)**：[更新步骤](docs/UPDATE-1.0.4.md)。完整解压，双击 update.cmd，选择原程序 EXE 所在文件夹，完成后使用原快捷方式启动。
+**[v1.0.3 / 旧v1.0.4 用户下载更新包](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/v1.0.4/xiaoxiao-zhuochong-1.0.4-update-from-1.0.3.zip)**：[更新步骤](docs/UPDATE-1.0.4.md)。完整解压，双击 update.cmd，选择原程序 EXE 所在文件夹，完成后使用原快捷方式启动。
+
+## 本次同版本修订（版本号仍为 v1.0.4）
+
+- 每个角色最多添加8个分身，本体不计入上限。
+- 分身归入原角色的“分身管理”二级菜单，可独立显示、隐藏、点播动作和移除。
+- 本体和分身均可独立调整大小，提供滑块、数值输入、应用和恢复默认。
+- 已下载原v1.0.4的用户也可使用同一更新包更新，不需要重新下载完整版。
 
 ## 本版内容
 

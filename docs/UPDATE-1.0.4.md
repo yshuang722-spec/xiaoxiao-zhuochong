@@ -1,6 +1,6 @@
-# v1.0.4 更新说明
+# v1.0.4 同版本更新说明
 
-小小桌宠 v1.0.3 → v1.0.4 更新教程
+小小桌宠 v1.0.3 / 原v1.0.4 → v1.0.4（同版本功能修订） 更新教程
 1. 完整解压更新包，不要在压缩包中直接运行。
 2. 从托盘退出全部桌宠，双击 update.cmd。
 3. 选择旧版“小小桌宠.exe”所在的文件夹，不是更新包目录，也不是角色文件夹。
@@ -10,8 +10,6 @@
 同名官方动作替换为本版；新增黑毛小狐狸。五角色素材包含在包中，无需在线下载。
 奶茶千金不在包中，已有本地奶茶千金也不会被修改。
 备份位于 %LOCALAPPDATA%\XiaoXiaoZhuoChong\UpdateBackups。
-此包适用于官方v1.0.3；其他版本请下载最新版完整包。不要手动仅复制payload。
+此包适用于官方v1.0.3及此前下载的官方v1.0.4；其他版本请下载最新版完整包。不要手动仅复制payload。
 
-完整包：https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/latest/download/xiaoxiao-zhuochong-win-x64-portable.zip
-
-更新包：https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/v1.0.4/xiaoxiao-zhuochong-1.0.4-update-from-1.0.3.zip
+本次新增：每角色最多8个分身（本体另计），分身收纳于原角色的“分身管理”。本体与分身均可独立调整显示大小，支持滑块、输入数值、应用和恢复默认。保留已有分身及其大小设置。版本号仍为1.0.4。

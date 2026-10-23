@@ -18,3 +18,9 @@ nav button:not([aria-current]){background:transparent;color:var(--muted)}
 .ai-message{padding:12px 0;border-bottom:1px solid var(--line)}.ai-message:last-child{border-bottom:0}.ai-message strong{color:#603b27}.ai-message p{color:#342f2b;margin:7px 0 0;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;max-width:75ch}
 #ai-chat{margin-top:18px}#ai-text{margin:8px 0 10px;resize:vertical}#ai-chat-state{margin-left:12px;color:var(--muted);font-size:13px}
 @media(max-width:920px){.ai-form{grid-template-columns:1fr}.ai-wide{grid-column:auto}}
+
+.character-actions{flex-wrap:wrap}.character-actions button:disabled{cursor:not-allowed}
+
+.clone-panel{padding:14px 20px 18px;border-top:1px solid var(--line);background:#f8f4ed}.clone-panel[hidden]{display:none}.clone-heading{margin:0 0 12px;font-size:13px;font-weight:600}.clone-empty,.clone-status{color:var(--muted);font-size:12px}.clone-item+.clone-item{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}.clone-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.clone-name{flex:1;min-width:100px;font-size:13px}.clone-line button{font-size:12px}.clone-action-details{margin-top:6px}.clone-action-details summary{cursor:pointer;font-size:12px;color:var(--muted);margin-bottom:8px}
+
+.size-control{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}.size-label{font-size:12px;color:var(--muted)}.size-range{flex:1;min-width:90px;accent-color:var(--accent)}.size-number{width:72px;padding:5px;border:1px solid #cfc4b8;border-radius:5px;background:#fff;font:inherit;color:inherit}.size-control button{font-size:12px;padding:6px}.clone-item .size-control{margin-top:5px;border-top:0}

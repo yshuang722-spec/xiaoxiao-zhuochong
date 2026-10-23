@@ -2998,6 +2998,7 @@ function apply(ctx) {
 	/** 单次业务路由(WebServer 注册 → HTTP 落盘 / 桌面 Helper 管道 → scheme 应答,共用同一份实现):
 	*  输入只需 rawUrl(/dsh-pet-7340/... + 查询) + method + body 文本;返回 RouteResult(JSON/文本/文件),
 	*  消费方各自落盘——业务逻辑只有一份,两端天然一致(硬契约:浏览器/桌面行为严格对齐)。 */
+	let cloneMutation = Promise.resolve();
 	const handlePetRoute = async (rawUrl, method, body) => {
 		const url = new URL(rawUrl, "http://localhost");
 		const rest = decodeURIComponent(url.pathname.slice(ROUTE_PREFIX.length + 1));
@@ -3071,6 +3072,54 @@ function apply(ctx) {
 				status: 405,
 				obj: { error: "method not allowed" }
 			};
+		}
+
+		if (rest === "pet-clone" || rest === "pet-clone-remove") {
+			if (method !== "POST") return {kind:"json",status:405,obj:{error:"method not allowed"}};
+			const operation=cloneMutation.then(async()=>{
+			let payload;try {payload=JSON.parse(body??"");}catch{return {kind:"json",status:400,obj:{error:"invalid JSON"}};}
+			const cfg=readAllConfig(configPaths),hit=findPetInstance(cfg,String(payload.id??""));
+			if(!hit)return {kind:"json",status:404,obj:{error:"找不到这个角色"}};
+			const pets=[...hit.conf.pets],original=pets[0];
+			let nextPets;
+			if(rest==="pet-clone"){
+				if(pets.length>=9)return {kind:"json",status:409,obj:{error:"每个角色最多只能添加8个分身"}};
+				const allIds=new Set(flattenPetList(cfg).map(p=>p.id));let id,index;
+				for(let i=1;i<=8;i++){const candidate=hit.entry.slice(0,48)+"__clone_"+i;if(!allIds.has(candidate)){id=candidate;index=i;break;}}
+				if(!id)return {kind:"json",status:409,obj:{error:"分身编号已用完"}};
+				const clone={...original,id,name:(original.name||original.id)+" · 分身"+index,display:"desktop",balanceEnabled:false,whisperEnabled:false,workStatusEnabled:false,position:{...original.position,marginX:(original.position.marginX||0)+36*index,marginY:(original.position.marginY||0)+18*index}};
+				nextPets=[...pets,clone];
+			}else{
+				if(hit.pet.id===original.id||!/__clone_[1-8]$/.test(hit.pet.id))return {kind:"json",status:400,obj:{error:"只能移除分身，不能移除本体"}};
+				nextPets=pets.filter(p=>p.id!==hit.pet.id);
+			}
+			const file=hit.entry==="main"?{path:userConfigPath,raw:readUserConfig(configPaths)}:readPetConfigEntry(configPaths,hit.entry);
+			if(!file)return {kind:"json",status:404,obj:{error:"角色配置文件不存在"}};
+			const clean=saveUserConfig({pets:nextPets},file.raw);
+			if(!clean)return {kind:"json",status:400,obj:{error:"分身配置不合法"}};
+			await mkdir(dirname(file.path),{recursive:true});
+			await writeFile(file.path,JSON.stringify(clean,null,2),"utf8");
+			syncDesktop(false);
+			return {kind:"json",status:200,obj:{ok:true}};
+			});cloneMutation=operation.catch(()=>{});return operation;
+		}
+
+		if (rest === "pet-size") {
+			if(method!=="POST")return {kind:"json",status:405,obj:{error:"method not allowed"}};
+			const operation=cloneMutation.then(async()=>{
+				let input;try{input=JSON.parse(body??"");}catch{return {kind:"json",status:400,obj:{error:"invalid JSON"}};}
+				if(typeof input.size!=="number"||!Number.isInteger(input.size)||input.size<120||input.size>2000)return {kind:"json",status:400,obj:{error:"大小请输入120至2000之间的整数"}};
+				const hit=findPetInstance(readAllConfig(configPaths),String(input.id??""));
+				if(!hit)return {kind:"json",status:404,obj:{error:"找不到这个角色或分身"}};
+				if(hit.pet.size===input.size)return {kind:"json",status:200,obj:{ok:true,size:input.size}};
+				const file=hit.entry==="main"?{path:userConfigPath,raw:readUserConfig(configPaths)}:readPetConfigEntry(configPaths,hit.entry);
+				if(!file)return {kind:"json",status:404,obj:{error:"找不到角色配置"}};
+				const pets=hit.conf.pets.map(p=>p.id===hit.pet.id?{...p,size:input.size}:p);
+				const clean=saveUserConfig({pets},file.raw);if(!clean)return {kind:"json",status:400,obj:{error:"大小配置不合法"}};
+				await mkdir(dirname(file.path),{recursive:true});await writeFile(file.path,JSON.stringify(clean,null,2),"utf8");
+				await syncDesktop(false);
+				return {kind:"json",status:200,obj:{ok:true,size:input.size}};
+			});cloneMutation=operation.catch(()=>{});return operation;
 		}
 		if (rest === "pet-display") {
 			if (method !== "POST") return {

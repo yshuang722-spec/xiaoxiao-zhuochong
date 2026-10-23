@@ -69,7 +69,7 @@ async function list() {
     const preview=cfg.animations.idle[0];let file=path.join(projectDir(entry),'animations',preview+'.webm');
     if(entry==='main'&&!fs.existsSync(file)&&!fs.existsSync(path.join(projectDir(entry),'animations')))file=path.join(PACKAGE,'assets/webm',preview+'.webm');
     let poster='';const posterFile=path.join(__dirname,'assets',entry+'.png');if(fs.existsSync(posterFile))poster='data:image/png;base64,'+fs.readFileSync(posterFile).toString('base64');
-    roles.push({id:pet.id,entry,name:pet.name||pet.id,visible:['desktop','both'].includes(pet.display),size:pet.size,actions:animationNames(cfg.animations),idle:preview,poster,project:entry==='main'&&!fs.existsSync(projectDir(entry))?path.join(HOME,'dsh-pet'):projectDir(entry),preview:fs.existsSync(file)?require('node:url').pathToFileURL(file).href:''});
+    roles.push({cloneCount:Math.max(0,cfg.pets.length-1),cloneLimit:8,isClone:pet.id!==cfg.pets[0].id&&/__clone_[1-8]$/.test(pet.id),id:pet.id,entry,name:pet.name||pet.id,visible:['desktop','both'].includes(pet.display),size:pet.size,actions:animationNames(cfg.animations),idle:preview,poster,project:entry==='main'&&!fs.existsSync(projectDir(entry))?path.join(HOME,'dsh-pet'):projectDir(entry),preview:fs.existsSync(file)?require('node:url').pathToFileURL(file).href:''});
   }
   return roles;
 }
@@ -93,4 +93,6 @@ async function importProject(folder) {
   catch(e){fs.rmSync(temp,{recursive:true,force:true});throw e;}
   return list();
 }
-module.exports={PACKAGE,HOME,ROOT,request,ensureServer,list,find,toggle,play,importProject,projectDir,setChatBridge};
+function clone(id,remove=false){const operation=writes.then(async()=>{await find(id);await request(base+(remove?'/pet-clone-remove':'/pet-clone'),'POST',{id});return list();});writes=operation.catch(()=>{});return operation;}
+function resize(id,size){const operation=writes.then(async()=>{await find(id);await request(base+'/pet-size','POST',{id,size});return list();});writes=operation.catch(()=>{});return operation;}
+module.exports={PACKAGE,HOME,ROOT,request,ensureServer,list,find,toggle,play,importProject,projectDir,setChatBridge,clone,resize};

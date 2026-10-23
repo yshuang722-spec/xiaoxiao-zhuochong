@@ -33,6 +33,9 @@ if(!app.requestSingleInstanceLock()){app.quit();}else if(process.argv.includes('
   handle('ai:history',id=>ai.history(id));
   handle('ai:send',(id,text)=>ai.send(id,text));
   handle('characters:list',()=>service.list());
+  handle('characters:resize',(id,size)=>service.resize(id,size).then(publishRoles));
+  handle('characters:clone',id=>service.clone(id).then(publishRoles));
+  handle('characters:remove-clone',id=>service.clone(id,true).then(publishRoles));
   handle('characters:toggle',(id,visible)=>service.toggle(id,visible));
   handle('characters:play',(id,name)=>service.play(id,name));
   handle('characters:folder',async id=>{const role=await service.find(id);const result=await shell.openPath(role.project);if(result)throw Error(result);return true;});

@@ -96,7 +96,7 @@ try{
  foreach($f in @($Manifest.files | Where-Object scope -eq 'program')){
   $dest=SafePath $ProgramDir $f.path
   if(Test-Path -LiteralPath $dest){$h=Hash $dest;if($h -ne $f.sha256 -and $h -notin @($f.before)){throw "这个客户端文件与v1.0.3/本更新版本不一致，未覆盖：$($f.path)"}}
-  elseif(@($f.before).Count){throw "客户端缺少必要文件：$($f.path)"}
+  elseif(@($f.before).Count -and -not $f.allowMissing){throw "客户端缺少必要文件：$($f.path)"}
  }
  $backupRoot=Join-Path $env:LOCALAPPDATA 'XiaoXiaoZhuoChong\UpdateBackups'
  $Transaction=Join-Path $backupRoot ([DateTime]::Now.ToString('yyyyMMdd-HHmmss-fff')+'-'+[Guid]::NewGuid().ToString('N').Substring(0,8))
