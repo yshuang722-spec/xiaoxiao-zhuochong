@@ -8,6 +8,8 @@ const sourcePackage = fs.existsSync(path.resolve(__dirname, '../dsh-pet/package.
 const PACKAGE = packaged ? bundled : path.resolve(__dirname, sourcePackage);
 const HOME = process.env.DSH_HOME || path.join(process.env.USERPROFILE, '.dsh');
 const ROOT = path.join(HOME, 'dsh-pet/characters');
+let chatBridgeEnvironment = null;
+function setChatBridge(environment) {chatBridgeEnvironment = environment;}
 function seedCharacters() {
   const seedRoot=path.resolve(__dirname,'../../characters');
   if(!packaged||!fs.existsSync(seedRoot))return;
@@ -35,10 +37,22 @@ function request(route, method = 'GET', body) {
 }
 async function ensureServer() {
   seedCharacters();
-  try {const health=await request('/health');if(path.resolve(health.plugin.root)!==PACKAGE)throw Error('3081 端口正在被另一个版本使用');return;} catch(e){if(!['ECONNREFUSED','ECONNRESET'].includes(e.code))throw e;}
+  try {
+    const health=await request('/health');
+    if(path.resolve(health.plugin.root)!==PACKAGE)throw Error('3081 端口正在被另一个版本使用');
+    if(!chatBridgeEnvironment)return;
+    // A host left behind after a client crash has an obsolete ephemeral bridge.
+    await request('/shutdown','POST');
+    let stopped=false;
+    for(let i=0;i<80;i++) {
+      await new Promise(r=>setTimeout(r,100));
+      try {await request('/health');} catch(e){if(['ECONNREFUSED','ECONNRESET'].includes(e.code)){stopped=true;break;}throw e;}
+    }
+    if(!stopped)throw Error('旧桌宠服务未退出，无法更新对话连接');
+  } catch(e){if(!['ECONNREFUSED','ECONNRESET'].includes(e.code))throw e;}
   const logDir=path.join(HOME,'pet-control-client/logs');fs.mkdirSync(logDir,{recursive:true});
   const out=fs.openSync(path.join(logDir,'server.stdout.log'),'a'),err=fs.openSync(path.join(logDir,'server.stderr.log'),'a');
-  const env={...process.env,DSH_HOME:HOME,LOCALAPPDATA:HOME};delete env.ELECTRON_RUN_AS_NODE;if(packaged)env.DSH_PET_ELECTRON_PATH=process.execPath;
+  const env={...process.env,...chatBridgeEnvironment,DSH_HOME:HOME,LOCALAPPDATA:HOME};delete env.ELECTRON_RUN_AS_NODE;if(packaged)env.DSH_PET_ELECTRON_PATH=process.execPath;
   const child=spawn(packaged ? path.resolve(__dirname,'../../../runtimes/node.exe') : path.join(process.env.ProgramFiles,'nodejs/node.exe'),[path.join(PACKAGE,'lib/standalone.js'),'--port','3081'],{cwd:PACKAGE,env,detached:true,windowsHide:true,stdio:['ignore',out,err]});
   let spawnError;child.on('error',e=>spawnError=e);child.unref();fs.closeSync(out);fs.closeSync(err);
   for(let i=0;i<40;i++){await new Promise(r=>setTimeout(r,250));if(spawnError)throw spawnError;try{const h=await request('/health');if(path.resolve(h.plugin.root)===PACKAGE)return;throw Error('启动了不匹配的服务');}catch(e){if(!['ECONNREFUSED','ECONNRESET'].includes(e.code))throw e;}}
@@ -79,4 +93,4 @@ async function importProject(folder) {
   catch(e){fs.rmSync(temp,{recursive:true,force:true});throw e;}
   return list();
 }
-module.exports={PACKAGE,HOME,ROOT,request,ensureServer,list,find,toggle,play,importProject,projectDir};
+module.exports={PACKAGE,HOME,ROOT,request,ensureServer,list,find,toggle,play,importProject,projectDir,setChatBridge};

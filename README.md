@@ -1,59 +1,34 @@
 # 小小桌宠
 
-Windows 桌面宠物客户端。解压即可使用，支持多个角色独立显示、动作点播、动作轮播和托盘控制。
+Windows 桌面宠物客户端，当前版本 **v1.0.4（2026-10-23）**。
 
-基于 **[PC2005-cloud](https://github.com/PC2005-cloud)** 的 **[dsh-pet](https://github.com/PC2005-cloud/dsh-pet)** 改造，感谢原作者提供桌宠引擎。保留原项目的 MIT 许可证和版权声明；新增角色、动画和图标由本项目作者创作。
+基于 **[PC2005-cloud](https://github.com/PC2005-cloud)** 的 **[dsh-pet](https://github.com/PC2005-cloud/dsh-pet)** 改造，感谢原作者提供桌宠引擎，保留原 MIT 许可。新增角色、动画和图标由本项目作者创作。
 
-## 下载与启动
+## 下载
 
-**当前版本：v1.0.3**
+**[下载最新版完整客户端（Windows 64位，解压即用）](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/latest/download/xiaoxiao-zhuochong-win-x64-portable.zip)**
 
-**[下载 Windows 64 位完整客户端（解压即用）](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/latest/download/xiaoxiao-zhuochong-win-x64-portable.zip)**
+新用户：右键“全部解压”，打开“小小桌宠”文件夹，双击“小小桌宠.exe”。内含运行环境，不必安装 Node、npm 或 Python；不要只移动一个 EXE。
 
-新用户只下载这个完整包，右键“全部解压”，进入“小小桌宠”文件夹，双击 **小小桌宠.exe**，然后在控制页开启角色。已包含运行环境和角色素材，无需安装Node、npm或Python。不要只移动一个EXE。
+**[v1.0.3 老用户下载更新包](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/v1.0.4/xiaoxiao-zhuochong-1.0.4-update-from-1.0.3.zip)**：[更新步骤](docs/UPDATE-1.0.4.md)。完整解压，双击 update.cmd，选择原程序 EXE 所在文件夹，完成后使用原快捷方式启动。
 
-已有v1.0.2的用户：[下载单独更新包](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/v1.0.3/xiaoxiao-zhuochong-1.0.3-update-from-1.0.2.zip)，完整解压后双击 **update.cmd**，选择**原程序的小小桌宠.exe所在文件夹**，等“更新完成”后用原快捷方式启动。[逐步更新说明与常见问题](docs/UPDATE-1.0.3.md)。
+## 本版内容
 
-## 可以做什么
+包含蓝毛小女仆、橙毛大小姐、黄毛该溜子、白毛小龙娘、黑毛小狐狸五个角色，补齐现有动作并加入最新对齐修正。奶茶千金尚未完成，本版不包含。
 
-- 分别显示或隐藏角色，切换一个角色不会重启其他角色。
-- 全部开启、全部隐藏，以及动作点播。
-- 大小姐、黄毛和白毛的小动作轮播。
-- 拖拽抛掷时，角色主体碰撞后相互弹开；遇到播放错误可恢复动作链。
-- 通过角色文件夹和角色包导入继续添加人物。
-- 关闭控制页后宠物继续运行；从系统托盘重新打开。
+- 角色独立开启、隐藏，支持全部开启和全部隐藏。
+- 动作点播与轮播、拖拽弹动、角色碰撞、播放错误恢复。
+- 角色独立人设和聊天历史，共用用户自己设置的模型接口；AI 设置位于二级菜单。
+- 宠物旁持续对话窗口、头顶回复气泡与大小姐的对话动作。
+- 角色运行及调整日志，自动清理超过十天的旧日志。
+- 关闭控制页后宠物继续运行；从托盘重新打开或退出全部。
 
-更新后包含 **蓝毛小女仆、橙毛大小姐、黄毛该溜子、白毛小龙娘** 四个可用角色。大小姐16段、黄毛7段、白毛8段动画；黑毛小狐狸暂不发布。
+数据位于 `%USERPROFILE%\.dsh\dsh-pet\characters`。发布包不包含作者的 API Key、聊天记录、日志或个人运行数据。
 
-## 退出、更新与数据
+## 源码与构建
 
-**完全退出：**在控制页或托盘菜单选择“退出全部桌宠”。窗口右上角的关闭按钮只隐藏控制页。
+客户端源码在 `client/`，角色配置、动画及人设在 `characters/`。实际发布的引擎 JavaScript 源码在 `dsh-pet/lib/` 和 `dsh-pet/runtime/`；同时保留原项目 TypeScript 源码。当前客户端集成改动包含在实际发布的 JavaScript 中，直接重编原 TypeScript 会覆盖这些集成改动。
 
-**更新：**已有v1.0.2用户完整解压v1.0.3更新包，双击`update.cmd`，选择原程序文件夹。更新器备份并更新官方角色动画，保留个人显示设置和自定义动作，无需重下整个客户端。详见[升级说明](docs/UPDATE-1.0.3.md)。
+使用 `tools/client-release/build-1.0.4.py` 配合本机已有 Electron 和 Node 可打包完整运行目录；原 NSIS 脚本仍保留。GitHub 自动生成的 Source code 是源码，使用者应下载上面的完整客户端 ZIP。
 
-**数据位置：**`%USERPROFILE%\.dsh\dsh-pet\characters`。每个角色使用独立的配置和动画目录；删除解压的程序文件夹会保留这些数据。
-
-[完整使用说明](使用说明.md)包含角色导入、动作播放和更新操作。
-
-## 原有可选功能
-
-“打开网站 / 查看余额”等菜单保持可见。余额、对话和碎碎念需要原 DSH 的账号、模型或宿主服务；独立运行时未预先连接，不影响桌宠显示和动画播放。
-
-## 开发与验证
-
-本仓库同时保留改造后的源码。客户端位于 `client/`，引擎位于 `dsh-pet/`，角色初始包位于 `characters/`。
-
-进入 `dsh-pet/` 后运行 `npm install`、`npm run build` 可构建引擎。测试命令：引擎目录下 `npm test`，仓库根目录下 `node --test client/service.test.cjs`。
-
-Windows 打包脚本在 `tools/client-release/`，使用已有的 Electron、Node 和 NSIS 工具；完整构建后才具备运行目录，GitHub 自动生成的源码压缩包用于开发。
-
-本版本已完成本机 Windows 运行、首次启动、角色独立控制、托盘同步、关闭/退出验证；v1.0.3完整包通过696个文件的归档校验。尚未声称在所有 Windows 版本和硬件环境测试通过。
-
-## 致谢与许可
-
-- 原作者：**PC2005-cloud**。
-- 原仓库：**https://github.com/PC2005-cloud/dsh-pet**。
-- 原许可证：[MIT LICENSE](LICENSE)。
-- [上游项目说明快照](docs/UPSTREAM_README.md)。
-
-Electron、Node 和其他依赖的许可证随程序保留在对应目录中。
+本版已通过隔离用户目录启动、五角色待机预览、更新器保留设置及自定义动作、重复更新、故障回滚、篡改包拒绝和归档完整性检查。不同设备的长期播放表现仍需实际使用反馈。

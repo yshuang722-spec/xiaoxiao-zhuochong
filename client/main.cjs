@@ -1,4 +1,4 @@
-const {app,BrowserWindow,ipcMain,Tray,Menu,nativeImage,dialog,shell}=require('electron');
+const {app,BrowserWindow,ipcMain,Tray,Menu,nativeImage,dialog,shell,safeStorage}=require('electron');
 const path=require('node:path'),fs=require('node:fs');
 const service=require('./service.cjs');
 app.setName('小小桌宠');fs.mkdirSync(path.join(service.HOME,'pet-control-client'),{recursive:true});app.setPath('userData',path.join(service.HOME,'pet-control-client'));
@@ -7,9 +7,12 @@ let window,tray,quitting=false;
 if(!app.requestSingleInstanceLock()){app.quit();}else if(process.argv.includes('--quit')){app.quit();}else{
  app.on('second-instance',(_event,argv)=>{if(argv.includes('--quit')){void quitAll();return;}if(window){window.show();if(window.isMinimized())window.restore();window.focus();}});
  app.whenReady().then(async()=>{
+  const ai=require('./ai.cjs').createAI({service,safeStorage,onChanged:id=>{if(window&&!window.isDestroyed())window.webContents.send('ai:changed',id);}});
+  const chatBridge=await require('./chat-bridge.cjs').startChatBridge({ai});
+  service.setChatBridge(chatBridge.env);app.once('before-quit',()=>chatBridge.close());
   try{await service.ensureServer();}catch(e){dialog.showErrorBox('桌宠启动失败',e.message);app.quit();return;}
-  const broker=require(path.join(service.PACKAGE,'runtime/electron-helper/collision-link.cjs')).startBroker();
-  await broker.ready;app.once('before-quit',()=>{void broker.close();});
+  try{const {startRoleAudit}=require(path.join(service.PACKAGE,'runtime/electron-helper/role-log.js'));const stopAudit=startRoleAudit({root:service.ROOT});app.once('before-quit',stopAudit);}catch(e){console.error('[pet-log] audit start failed:',e.message);}
+  try{const broker=require(path.join(service.PACKAGE,'runtime/electron-helper/collision-link.cjs')).startBroker();broker.ready.catch(e=>console.error('[collision]',e.message));app.once('before-quit',()=>{void broker.close();});}catch(e){console.error('[collision] start failed:',e.message);}
   window=new BrowserWindow({width:1100,height:780,minWidth:800,minHeight:620,title:'小小桌宠',backgroundColor:'#faf8f4',autoHideMenuBar:true,show:false,icon:path.join(__dirname,'assets/app.ico'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   window.setMenu(null);window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   // Installer/uninstaller requests a normal shutdown before replacing program files.
@@ -23,7 +26,12 @@ if(!app.requestSingleInstanceLock()){app.quit();}else if(process.argv.includes('
   const show=()=>{window.show();window.focus();};
   tray.on('click',show);tray.on('double-click',show);
   tray.setContextMenu(Menu.buildFromTemplate([{label:'打开角色控制台',click:show},{label:'全部开启',click:()=>showAll().catch(e=>dialog.showErrorBox('开启失败',e.message))},{label:'隐藏全部角色',click:()=>hideAll().catch(e=>dialog.showErrorBox('隐藏失败',e.message))},{type:'separator'},{label:'退出全部桌宠',click:()=>quitAll()}]));
-  const handle=(name,fn)=>ipcMain.handle(name,async(event,...args)=>{if(event.sender!==window.webContents)throw Error('无效的窗口');return fn(...args);});
+  const handle=(name,fn)=>ipcMain.handle(name,async(event,...args)=>{if(event.sender!==window.webContents||event.senderFrame!==window.webContents.mainFrame)throw Error('无效的窗口');return fn(...args);});
+  handle('ai:settings',()=>ai.settings());
+  handle('ai:save',input=>ai.save(input));
+  handle('ai:test',()=>ai.test());
+  handle('ai:history',id=>ai.history(id));
+  handle('ai:send',(id,text)=>ai.send(id,text));
   handle('characters:list',()=>service.list());
   handle('characters:toggle',(id,visible)=>service.toggle(id,visible));
   handle('characters:play',(id,name)=>service.play(id,name));
@@ -33,6 +41,7 @@ if(!app.requestSingleInstanceLock()){app.quit();}else if(process.argv.includes('
   handle('characters:import',async()=>{const result=await dialog.showOpenDialog(window,{title:'选择角色项目（包含 config.json 和 animations 文件夹）',properties:['openDirectory']});if(result.canceled)return null;return service.importProject(result.filePaths[0]);});
   handle('client:quit',()=>quitAll());
   await window.loadFile(path.join(__dirname,'index.html'));
+  if(process.argv.includes('--verify-ai'))void require('./verify-ai.cjs').verifyAI(window,ai,service);
  }).catch(e=>{dialog.showErrorBox('控制台出错',e.message);app.quit();});
 }
 function publishRoles(roles){if(window&&!window.isDestroyed())window.webContents.send('characters:changed',roles);return roles;}

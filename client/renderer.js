@@ -2,7 +2,7 @@ const api=window.petClient,container=document.querySelector('#characters'),feedb
 let roles=[],busy=false;const expanded=new Set();
 function message(text,error=false){feedback.textContent=text;feedback.className=error?'error':'';}
 function el(tag,className,text){const n=document.createElement(tag);if(className)n.className=className;if(text!==undefined)n.textContent=text;return n;}
-async function run(task,success){if(busy)return;busy=true;document.querySelectorAll('button,select').forEach(b=>b.disabled=true);try{await task();if(success)message(success);}catch(e){message(e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/,''),true);}finally{busy=false;render();}}
+async function run(task,success){if(busy)return;busy=true;document.querySelector('main').querySelectorAll('button,select').forEach(b=>b.disabled=true);try{await task();if(success)message(success);}catch(e){message(e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/,''),true);}finally{busy=false;render();}}
 function render(){
  container.replaceChildren();document.querySelectorAll('header button,.toolbar button,footer button').forEach(b=>b.disabled=busy);
  document.querySelector('#summary').textContent=`${roles.length} 位角色 · ${roles.filter(r=>r.visible).length} 位正在桌面陪伴`;

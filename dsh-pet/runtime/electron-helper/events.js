@@ -129,12 +129,9 @@ PetSprite.prototype.showBalanceNotice = function showBalanceNotice(state) {
 // image：host 随机抽定的配图名称（未开配图/池为空则空串，与浏览器端同一契约）
 PetSprite.prototype.showWhisper = function showWhisper(text, image) {
   const pool = this.animations.events?.whisper;
-  if (!pool || pool.length === 0) {
-    console.error('[dsh-pet] 配置缺少 animations.events.whisper，无法播放碎碎念动画');
-    return;
-  }
   // 整池随机抽 1 槽（避开当前正播动画，避免连续重复）；槽位若为数组候选再档内随机（与浏览器一致）
-  const name = S.pickSlot(S.pick(pool, this.anim), this.anim);
+  // 说话动画可选：没有专用素材也必须显示对话回复，保持当前动画继续播放。
+  const name = pool?.length ? S.pickSlot(S.pick(pool, this.anim), this.anim) : null;
   console.log(
     '[dsh-pet] ' +
       new Date().toTimeString().slice(0, 8) +
@@ -142,12 +139,9 @@ PetSprite.prototype.showWhisper = function showWhisper(text, image) {
       this.pet.id +
       ' -> [' +
       name +
-      '] 「' +
-      text +
-      '」' +
-      (image ? ' [' + image + ']' : ''),
+      ']',
   );
-  this.stopMove();
+  if (name) this.stopMove();
   this.whisperOn = true;
   this.whisperView = S.whisperBubbleView({ ok: true, text, ts: 0 });
   this.whisperImage = typeof image === 'string' ? image : '';
@@ -158,7 +152,7 @@ PetSprite.prototype.showWhisper = function showWhisper(text, image) {
     this.whisperOn = false;
     this.renderBubble();
   }, BUBBLE_DURATION_MS);
-  this.playOnce(name);
+  if (name) this.playOnce(name);
 };
 
 // 余额展示（档位动画 + 气泡）：周期轮询与菜单点播共用同一展示路径，视觉/行为严格一致
@@ -257,11 +251,29 @@ function applyAnimLeaf(petId, leaf) {
   }
 }
 
+let animationConfigVersion = null;
+async function refreshAnimationConfig(version) {
+  if (!version || version === animationConfigVersion) return;
+  const response = await fetch(BASE + '/config', { cache: 'no-store' });
+  if (!response.ok) throw new Error('animation config http ' + response.status);
+  const pets = S.flattenConfigPets(await response.json());
+  for (const sprite of sprites) {
+    const pet = pets.find(p => p.id === sprite.pet.id);
+    if (!pet) continue;
+    sprite.animations = pet.animations;
+    sprite.weights = pet.animationWeights;
+    sprite.pet.animations = pet.animations;
+    sprite.pet.animationWeights = pet.animationWeights;
+  }
+  animationConfigVersion = version;
+}
+
 /** 跑一拍 /state（1s 定时与「前端动作后立刻刷新」共用同一份实现） */
 async function pollStateOnce() {
   try {
     const s = await S.fetchState(STATE_URL);
     if (!s) return;
+    await refreshAnimationConfig(s.configVersion);
     if (stateBaseline === null) {
       stateBaseline = S.flattenCounters(s); // 首拉：只记基线，不渲染（避免启动/重载时重放旧气泡）
       return;

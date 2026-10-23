@@ -10,7 +10,7 @@
       "fixedEnabled": false,
       "display": "none",
       "position": {
-        "corner": "bottom-right",
+        "corner": "bottom-left",
         "marginX": 24,
         "marginY": 60
       }
@@ -75,6 +75,12 @@
         "待机-翻书",
         "待机-翻书",
         "待机-翻书"
+      ],
+      "whisper": [
+        "对屏碎碎念",
+        "揪头发碎碎念",
+        "翻书碎碎念",
+        "傲娇碎碎念"
       ]
     }
   },

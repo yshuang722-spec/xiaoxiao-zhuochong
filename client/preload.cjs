@@ -1,5 +1,11 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('petClient', Object.freeze({
+  aiSettings: () => ipcRenderer.invoke('ai:settings'),
+  aiSave: (input) => ipcRenderer.invoke('ai:save', input),
+  aiTest: () => ipcRenderer.invoke('ai:test'),
+  aiHistory: (id) => ipcRenderer.invoke('ai:history', id),
+  aiSend: (id, text) => ipcRenderer.invoke('ai:send', id, text),
+  onAIChanged: (callback) => {const listener=(_event,id)=>callback(id);ipcRenderer.on('ai:changed',listener);return ()=>ipcRenderer.removeListener('ai:changed',listener);},
   list: () => ipcRenderer.invoke('characters:list'),
   toggle: (id, visible) => ipcRenderer.invoke('characters:toggle', id, visible),
   play: (id, name) => ipcRenderer.invoke('characters:play', id, name),

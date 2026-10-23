@@ -7,7 +7,7 @@
       "balanceEnabled": false,
       "whisperEnabled": false,
       "workStatusEnabled": false,
-      "fixedEnabled": true,
+      "fixedEnabled": false,
       "display": "none",
       "position": {
         "corner": "bottom-left",
@@ -55,7 +55,9 @@
           "挥手打招呼",
           "高兴飞起",
           "提裙转圈",
-          "喷火冒烟"
+          "喷火冒烟",
+          "额度耗尽",
+          "变身Astra形态[非满血版本]"
         ],
         "noMirror": false
       }

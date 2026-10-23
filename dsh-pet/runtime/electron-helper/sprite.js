@@ -53,9 +53,7 @@ class PetSprite {
     this.animations = pet.animations || cfg.animations;
     this.weights = pet.animationWeights || cfg.animationWeights;
     // 拖拽抛掷物理参数（顶层全局；拍平已吹入实例，兜底回全局/默认）
-    this.physics = { ...(pet.physics || config.physics || S.DEFAULT_PHYSICS) };
-    // Enable the newly released feature for all four published roles; custom roles keep their own setting.
-    this.physics.petCollision = ['main', 'ojousama', 'character3', 'character4'].includes(this.assetRoot) || this.physics.petCollision === true;
+    this.physics = pet.physics || config.physics || S.DEFAULT_PHYSICS;
     // 抛掷锁定在当前屏幕（根字段；拍平已吹入实例，兜底回主条目/默认）：
     // true = 甩出去只在松手时所在那块屏内弹（屏缝当墙），false = 照常跨屏飞行
     this.confineToScreen = pet.confineToScreen === true || config.confineToScreen === true;
@@ -238,15 +236,20 @@ class PetSprite {
         this.others = next;
       });
       window.petBridge.onPetHit((payload) => {
-        const vx=Number(payload?.vx),vy=Number(payload?.vy);
-        if(Number.isFinite(vx)&&Number.isFinite(vy))this.onDeskHit(toLocal(vx),toLocal(vy),toLocal(Number(payload.dx)||0),toLocal(Number(payload.dy)||0));
+        const vx = Number(payload && payload.vx);
+        const vy = Number(payload && payload.vy);
+        if (Number.isFinite(vx) && Number.isFinite(vy)) {
+          this.logRuntime('角色碰撞', { peer: String(payload.peer || ''), vx, vy, dx: Number(payload.dx) || 0, dy: Number(payload.dy) || 0 });
+          this.onDeskHit(toLocal(vx), toLocal(vy), toLocal(Number(payload.dx) || 0), toLocal(Number(payload.dy) || 0));
+        }
       });
     }
   }
 
   dispose() {
     this.mediaGuard?.stop();
-    if(this.playbackGuard)window.clearInterval(this.playbackGuard);
+    this.logRuntime('角色销毁');
+    if (this.playbackGuard) window.clearInterval(this.playbackGuard);
     this.ac.abort();
     this.inputRegionMutation.disconnect();
     this.inputRegionResize.disconnect();
@@ -290,7 +293,7 @@ class PetSprite {
         toScreen(this.bottomPad),
         fly ? toScreen(fly.vx) : 0,
         fly ? toScreen(fly.vy) : 0,
-        !!this.physics.petCollision,
+        !!this.physics?.petCollision,
         !!fly,
       );
     }
@@ -369,7 +372,11 @@ class PetSprite {
     return this.pos.y + this.halfH;
   }
 
-  // 双缓冲切换（与浏览器同一套：前台 opacity 切换 + 降级视频清 handler 并停播，防残留 ended 雪崩）
+  // White dragon recovery is isolated from the other characters' playback.
+  logRuntime(event, details = {}) {
+    window.petBridge?.recordRuntime?.(event, { animation: this.anim, ...details });
+  }
+
   recoverPlayback(reason) {
     this.mediaGuard?.stop();
     this.pending = null;
@@ -385,7 +392,7 @@ class PetSprite {
     this.mediaGuard?.stop();
     this.mediaGuard=window.PetPlaybackGuard.watch(video,{
       isCurrent:()=>gen===this.gen,
-      isBlocked:()=>this.dragState.active||this.menuOpen||this.chatOpen||this.workOn||!!this.pending,
+      isBlocked:()=>this.dragState.active||this.workOn||!!this.pending,
       isOnce:()=>this.once,
       onFailure:reason=>this.recoverPlayback(reason),
       onEnded:()=>this.handleEnded(),
@@ -406,10 +413,14 @@ class PetSprite {
     }
     const gen = ++this.gen;
     this.pending = { anim: next, once: nextOnce, gen };
+    this.logRuntime('动画请求', { animation: next, once: nextOnce, gen });
     const target = this.front === 0 ? this.videoB : this.videoA;
     const el = target;
     if (!el) return;
-    el.src = this.assetBase + encodeURIComponent(next) + (S.ANIMATION_EXT || '.webm') + ('?v='+(this.assetRevision??=Date.now()));
+    // A refreshed fox window must not reuse an hour-old cached replacement clip.
+    // Keep a stable revision within the window so ordinary playback still caches.
+    const assetRevision = '?v=' + (this.assetRevision ??= Date.now());
+    el.src = this.assetBase + encodeURIComponent(next) + (S.ANIMATION_EXT || '.webm') + assetRevision;
     el.loop = !nextOnce;
     el.muted = true;
     el.autoplay = true;
@@ -422,6 +433,7 @@ class PetSprite {
       if (!this.pending || this.pending.gen !== gen) return;
       this.pending = null;
       console.warn('[dsh-pet] 素材加载失败 pet=' + this.pet.id + ' anim=' + next + '：' + why + '（已释放本次切换）');
+      this.logRuntime('素材加载失败', { animation: next, reason: why });
       this.recoverPlayback(why);
     };
     const loadTimer = window.setTimeout(() => loadGuard('10s 超时'), 10000);
@@ -434,9 +446,10 @@ class PetSprite {
       el.removeEventListener('loadeddata', onReady);
       window.clearTimeout(loadTimer);
       el.onerror = null;
-      if(gen!==this.gen)return;
+      if (gen !== this.gen) return;
       if (this.pending && this.pending.gen !== gen) return;
-      window.PetCanvasLayout?.apply(el, this.size, this.assetRoot);
+        const canvasLayout = window.PetCanvasLayout?.apply(el, this.size, this.assetRoot);
+      if (canvasLayout) this.logRuntime('画幅适配', { profile: canvasLayout.profile, canvasWidth: el.videoWidth, canvasHeight: el.videoHeight, scale: canvasLayout.scale });
       const old = this.front === 0 ? this.videoA : this.videoB;
       el.classList.add('is-front');
       if (old && old !== el) {
@@ -448,7 +461,8 @@ class PetSprite {
       this.pending = null;
       el.style.transform = this.facing === 'right' ? 'scaleX(-1)' : '';
       el.play().catch(() => {});
-      this.watchPlayback(el,gen);
+      this.logRuntime('动画开始', { animation: next, once: nextOnce, duration: Number.isFinite(el.duration) ? el.duration : 0 });
+      this.watchPlayback(el, gen);
       // 点击 Q 弹：等新动画就位后才压（压的是新点击动画的首帧，与浏览器一致）
       if (this.pendingSquash) {
         this.pendingSquash = false;
@@ -465,7 +479,7 @@ class PetSprite {
     // fading video layers makes the desktop briefly show through every cycle.
     // Keep other pets and interaction/movement playback on their original path.
     const continuousIdle =
-      ['ojousama', 'character3', 'character4'].includes(this.assetRoot) &&
+      ['ojousama', 'character3'].includes(this.assetRoot) &&
       !this.animations.categories.some((c) => c.id === '小动作' && c.actions.length > 1) &&
       this.animations.idle.length === 1 &&
       name === this.animations.idle[0] &&
@@ -492,7 +506,7 @@ class PetSprite {
     this.stopMove();
     const { animations, animationWeights } = { animations: this.animations, animationWeights: this.weights };
     const smallActions = animations.categories.find((c) => c.id === '小动作')?.actions;
-    if (['ojousama', 'character3', 'character4'].includes(this.assetRoot) && smallActions?.length && !this.workOn) {
+    if ((this.assetRoot === 'ojousama' || /^character\d+$/.test(this.assetRoot)) && smallActions?.length && !this.workOn) {
       // Rotate every small action, including the idle entry, without repeating
       // the same clip through a fade when the category contains only one item.
       const next = smallActions[(smallActions.indexOf(this.anim) + 1) % smallActions.length];
@@ -529,11 +543,12 @@ class PetSprite {
   }
 
   handleEnded() {
+    this.logRuntime('动画结束');
     if (this.dragState.active) return;
     const { animations } = { animations: this.animations };
-    // Configured orange/yellow small actions resume their playlist after interaction.
+    // Configured custom pets resume their own small-action playlist after interaction.
     if (
-      ['ojousama', 'character3', 'character4'].includes(this.assetRoot) &&
+      (this.assetRoot === 'ojousama' || /^character\d+$/.test(this.assetRoot)) &&
       !this.workOn &&
       animations.categories.some((c) => c.id === '小动作' && c.actions.length > 0)
     ) {
@@ -763,7 +778,7 @@ class PetSprite {
           vy: toScreen(state.vy),
           size: toScreen(this.size),
           bottomPad: toScreen(this.bottomPad),
-          enabled: !!this.physics.petCollision,
+          enabled: !!this.physics?.petCollision,
           flying: true,
         });
         this.lastFlightReport = now;
@@ -816,12 +831,12 @@ class PetSprite {
   }
 
   /** 被撞回调（跨窗碰撞 broker 转发）：停当前动作，从落点以新初速抛出去（全复用现有物理） */
-  onDeskHit(vx, vy, dx=0, dy=0) {
-    if(this.dragState.active)return;
+  onDeskHit(vx, vy, dx = 0, dy = 0) {
+    if (this.dragState.active) return;
     this.stopMove();
     this.stopDragFollow();
     this.stopThrow();
-    this.startThrow(this.pos.x+dx, this.pos.y+dy, vx, vy);
+    this.startThrow(this.pos.x + dx, this.pos.y + dy, vx, vy);
   }
 
   /** Q 弹挤压：前台视频垂直压扁（贴地锚定，transform-origin:bottom）再回弹；

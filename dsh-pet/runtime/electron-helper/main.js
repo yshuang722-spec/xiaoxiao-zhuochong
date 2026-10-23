@@ -286,6 +286,52 @@ if (BRIDGE) {
 
 /** 窗口表：petId -> BrowserWindow */
 const windows = new Map();
+const { createRoleLogger } = require('./role-log.js');
+const roleLogs = new Map();
+ipcMain.on('pet:runtime-log', (event, payload) => {
+  const log = roleLogs.get(event.sender.id);
+  const allowed = ['动画请求', '动画开始', '动画结束', '素材加载失败', '播放恢复', '角色销毁', '角色碰撞', '画幅适配'];
+  if (!log || !allowed.includes(payload?.event)) return;
+  const data = payload.details || {};
+  // Only playback fields cross this bridge; do not log chat, prompts or credentials.
+  const safe = {};
+  for (const key of ['animation', 'reason', 'once', 'gen', 'duration', 'recoveries', 'peer', 'vx', 'vy', 'dx', 'dy', 'profile', 'canvasWidth', 'canvasHeight', 'scale']) {
+    if (['string', 'number', 'boolean'].includes(typeof data[key])) safe[key] = typeof data[key] === 'string' ? data[key].slice(0, 300) : data[key];
+  }
+  log.record(payload.event, safe);
+});
+
+function attachRoleLog(win, pet) {
+  try {
+    const log = createRoleLogger({ entry: pet.assetRoot || pet.id, petId: pet.id, name: pet.name || pet.id, watchChanges: false });
+    const senderId = win.webContents.id;
+    roleLogs.set(senderId, log); log.start();
+    let capturing = false, lastState = null, stalled = false;
+    const capture = async () => {
+      if (capturing || win.isDestroyed()) return;
+      capturing = true;
+      let timeout;
+      try {
+        const state = await Promise.race([
+          win.webContents.executeJavaScript(`(() => typeof sprites === 'undefined' ? [] : sprites.map(s => { const v = s.front === 0 ? s.videoA : s.videoB; return { animation:s.anim, pending:s.pending?.anim || null, videoWidth:v?.videoWidth, videoHeight:v?.videoHeight, canvasApi:!!window.PetCanvasLayout, petSize:s.size, videoStyle:v ? {left:v.style.left,top:v.style.top,width:v.style.width,height:v.style.height} : null, time:v?.currentTime, duration:Number.isFinite(v?.duration) ? v.duration : null, paused:v?.paused, ended:v?.ended, readyState:v?.readyState, error:v?.error ? {code:v.error.code,message:v.error.message} : null, dragging:s.dragState?.active, recoveries:s.playbackRecoveries || 0, lastRecovery:s.lastPlaybackRecovery || null }; }))()`),
+          new Promise((_, reject) => { timeout = setTimeout(() => reject(Error('renderer snapshot timeout')), 3000); }),
+        ]);
+        log.record('播放状态', state);
+        const current = state[0];
+        const frozen = current && lastState && current.animation === lastState.animation && current.time === lastState.time && !current.dragging && !current.pending;
+        if (frozen && !stalled) log.record('播放疑似停滞', current);
+        stalled = !!frozen; lastState = current;
+      } catch (error) { log.record('状态读取失败', { 错误: error.message }); }
+      finally { clearTimeout(timeout); capturing = false; }
+    };
+    const timer = setInterval(capture, 30000); timer.unref?.();
+    win.webContents.once('did-finish-load', () => setTimeout(capture, 2000));
+    win.webContents.on('render-process-gone', (_event, details) => log.record('渲染进程退出', { reason: details.reason, exitCode: details.exitCode }));
+    win.on('unresponsive', () => log.record('窗口无响应'));
+    win.on('responsive', () => log.record('窗口恢复响应'));
+    win.on('closed', () => { clearInterval(timer); roleLogs.delete(senderId); log.stop(); });
+  } catch (error) { console.error('[pet-log] setup failed: ' + error.message); }
+}
 
 /** win.id -> 上一次**请求**的内容区矩形（"x,y,w,h"）：pet:set-bounds 的去重基准，见那里的注释 */
 const lastRequestedBounds = new Map();
@@ -300,14 +346,14 @@ const petStates = new Map();
 const { connectRole } = require('./collision-link.cjs');
 const collisionLinks = new Map();
 function linkCollision(petId, win) {
+  const log = roleLogs.get(win.webContents.id);
   const link = connectRole({ id: petId,
     onHit: hit => { if (!win.isDestroyed()) win.webContents.send('pet:hit', hit); },
+    onStatus: connected => log?.record('碰撞通信状态', { connected }),
   });
   collisionLinks.set(petId, link);
   win.once('closed', () => { link.close(); collisionLinks.delete(petId); });
 }
-
-
 
 /** 把当前全量宠物状态广播给所有窗口（碰撞检测的共享站场） */
 function broadcastPetStates() {
@@ -324,8 +370,8 @@ function broadcastPetStates() {
 function updatePetState(petId, partial) {
   const prev = petStates.get(petId) || { x: 0, y: 0, vx: 0, vy: 0, size: 0, bottomPad: 0 };
   petStates.set(petId, Object.assign({}, prev, partial));
-  const win=windows.get(petId);
-  collisionLinks.get(petId)?.publish({...petStates.get(petId),held:!!(win&&inputBusy.get(win.id))});
+  const win = windows.get(petId);
+  collisionLinks.get(petId)?.publish({ ...petStates.get(petId), held: !!(win && inputBusy.get(win.id)) });
   broadcastPetStates();
 }
 
@@ -414,11 +460,16 @@ function createPetWindows() {
   const configUrl = process.env.DSH_PET_CONFIG_URL || 'http://127.0.0.1:3080/dsh-pet-7340/config';
   const pets = petsFromEnv();
   const scale = petScale();
+  // Invisible native owner suppresses Windows taskbar entries, preserving chat focus.
+  const taskbarOwner = process.platform === 'win32' && pets.length
+    ? new BrowserWindow({ show: false, width: 1, height: 1, frame: false, skipTaskbar: true, focusable: false })
+    : undefined;
   for (const pet of pets) {
     // 初始窗口尺寸也要吃缩放补偿，否则启动瞬间会有一次可见的尺寸跳变
     const { width, height } = petWindowSize(pet.size * scale);
     const win = new BrowserWindow({
       title: '桌宠角色 · ' + pet.id,
+      parent: taskbarOwner,
       width,
       height,
       x: area.x, // 初始左上角；renderer 首帧按配置角落/位置校正
@@ -518,6 +569,7 @@ function createPetWindows() {
       clearInterval(pointerTimer);
       clearInterval(topmostTimer);
       windows.delete(pet.id);
+      if (!windows.size && taskbarOwner && !taskbarOwner.isDestroyed()) taskbarOwner.destroy();
       lastRequestedBounds.delete(win.id);
       windowIgnore.delete(win.id);
       inputBusy.delete(win.id);
@@ -553,7 +605,8 @@ function createPetWindows() {
         win.destroy();
       });
     windows.set(pet.id, win);
-    linkCollision(pet.id,win);
+    attachRoleLog(win, pet);
+    linkCollision(pet.id, win);
   }
 }
 
@@ -576,13 +629,14 @@ function bridgeRequest(method, url, body) {
     const id = ++bridgeSeq;
     bridgePending.set(id, { resolve, reject });
     process.stdout.write(BRIDGE_PREFIX + JSON.stringify({ id, method, url, body, cb: bridgeCallbackUrl }) + '\n');
-    // 宿主若长期不应答（进程退出/宿主动作挂起）不无限挂起：45s 兜底（LLM 生成最长 30-60s）
+    // 模型调用最长 60 秒，聊天多留转发与显示余量；普通请求仍为 45 秒。
+    const timeoutMs = method === 'POST' && /\/chat(?:\?|$)/.test(url) ? 75000 : 45000;
     setTimeout(() => {
       const p = bridgePending.get(id);
       if (!p) return;
       bridgePending.delete(id);
       p.reject(new Error('bridge request timeout'));
-    }, 45000).unref?.();
+    }, timeoutMs).unref?.();
   });
 }
 
@@ -728,8 +782,8 @@ app.whenReady().then(() => {
         bottomPad: Number.isFinite(bottomPad) && bottomPad > 0 ? bottomPad : petStates.get(petId)?.bottomPad || 0,
         vx: Number.isFinite(vx) ? vx : 0,
         vy: Number.isFinite(vy) ? vy : 0,
-        enabled: bounds.collisionEnabled===true,
-        flying: bounds.flying===true,
+        enabled: bounds.collisionEnabled === true,
+        flying: bounds.flying === true,
       });
     }
   });
@@ -748,7 +802,7 @@ app.whenReady().then(() => {
     const size = Number(s.size);
     const bottomPad = Number(s.bottomPad);
     if (![x, y, vx, vy, size, bottomPad].every(Number.isFinite)) return;
-    updatePetState(petId, { x, y, vx, vy, size, bottomPad });
+    updatePetState(petId, { x, y, vx, vy, size, bottomPad, enabled: s.enabled === true, flying: s.flying === true });
   });
 
   // 碰撞结果转发：飞行方窗口检测到撞到 targetId → 把动量结果（目标新初速）转发给目标窗口
@@ -784,8 +838,8 @@ app.whenReady().then(() => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win || win.isDestroyed()) return;
     inputBusy.set(win.id, !!busy);
-    const petId=[...windows.keys()].find(id=>windows.get(id)===win);
-    if(petId&&petStates.has(petId))updatePetState(petId,{});
+    const petId = [...windows.keys()].find(id => windows.get(id) === win);
+    if (petId && petStates.has(petId)) updatePetState(petId, {});
   });
 
   ipcMain.on('pet:input-regions', (event, input) => {

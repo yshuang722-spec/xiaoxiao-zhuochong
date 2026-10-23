@@ -7,7 +7,7 @@
       "balanceEnabled": false,
       "whisperEnabled": false,
       "workStatusEnabled": false,
-      "fixedEnabled": true,
+      "fixedEnabled": false,
       "display": "none",
       "position": {
         "corner": "bottom-left",
@@ -54,7 +54,8 @@
           "左右观察",
           "转圈摔倒",
           "下好片了",
-          "小汽车"
+          "小汽车",
+          "飞去火星"
         ],
         "noMirror": true
       }
