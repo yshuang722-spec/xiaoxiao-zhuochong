@@ -23,7 +23,7 @@ Windows 桌面宠物客户端，当前版本 **v1.0.4（2026-10-23）**。
 - 角色运行及调整日志，自动清理超过十天的旧日志。
 - 关闭控制页后宠物继续运行；从托盘重新打开或退出全部。
 
-数据位于 `%USERPROFILE%\.dsh\dsh-pet\characters`。发布包不包含作者的 API Key、聊天记录、日志或个人运行数据。
+数据位于 `%USERPROFILE%\.dsh\dsh-pet\characters`。
 
 ## 源码与构建
 
