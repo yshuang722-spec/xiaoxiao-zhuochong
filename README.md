@@ -4,6 +4,14 @@ Windows 桌面宠物客户端，当前版本 **v1.0.4（2026-10-23）**。
 
 基于 **[PC2005-cloud](https://github.com/PC2005-cloud)** 的 **[dsh-pet](https://github.com/PC2005-cloud/dsh-pet)** 改造，感谢原作者提供桌宠引擎，保留原 MIT 许可。新增角色、动画和图标由本项目作者创作。
 
+## 安卓手机版
+
+**[下载安卓 APK（v0.2.0）](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/android-v0.2.0/xiaoxiao-zhuochong-android-v0.2.0.apk)** · [安卓发布页与安装步骤](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/tag/android-v0.2.0) · [完整安卓源码及素材](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/android-v0.2.0/xiaoxiao-zhuochong-android-v0.2.0-source.zip)
+
+适用于 Android 8.0 及以上。安装后允许悬浮显示，选择角色并离开控制页即可使用。支持五角色、动作轮播、拖动弹跳与碰撞、分身、大小调整、角色资料、AI 对话和日夜外观；AI 对话需自行配置接口。本次包含动作切换时的漂移与闪跳修复。
+
+安卓手机版与下方 Windows 版分别下载、分别安装；Windows 更新包不适用于安卓。暂未提供安卓自动更新。
+
 ## 下载
 
 **[下载最新版完整客户端（Windows 64位，解压即用）](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/latest/download/xiaoxiao-zhuochong-win-x64-portable.zip)**
