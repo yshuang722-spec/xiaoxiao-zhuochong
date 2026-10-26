@@ -37,7 +37,7 @@ Windows 桌面宠物客户端，当前版本 **v1.0.5**。
 
 ## 安卓手机版
 
-**[下载安卓 APK（v0.2.0）](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/android-v0.2.0/xiaoxiao-zhuochong-android-v0.2.0.apk)** · [安卓发布页与安装步骤](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/tag/android-v0.2.0) · [完整安卓源码及素材](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/android-v0.2.0/xiaoxiao-zhuochong-android-v0.2.0-source.zip)
+**[下载安卓 APK（v0.3.0）](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/android-v0.3.0/xiaoxiao-zhuochong-android-v0.3.0.apk)** · [安卓发布页与安装步骤](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/tag/android-v0.3.0) · [完整安卓源码及素材](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/android-v0.3.0/xiaoxiao-zhuochong-android-v0.3.0-source.zip)
 
 适用于 Android 8.0 及以上。安装后允许悬浮显示，选择角色并离开控制页即可使用。支持五角色、动作轮播、拖动弹跳与碰撞、分身、大小调整、角色资料、AI 对话和日夜外观；AI 对话需自行配置接口。本次包含动作切换时的漂移与闪跳修复。
 
