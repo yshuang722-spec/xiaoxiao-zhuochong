@@ -20,7 +20,7 @@ RunChecked "$Jdk\bin\javac.exe" (@('-encoding','UTF-8','-source','8','-target','
 $classes=@(Get-ChildItem "$Root\build\classes" -Recurse -Filter *.class | ForEach-Object FullName)
 $env:JAVA_HOME=$Jdk
 RunChecked "$Bt\d8.bat" (@('--lib',$Jar,'--min-api','26','--output',"$Root\build\dex")+$classes)
-RunChecked "$Bt\aapt.exe" @('package','-f','-M',"$Root\AndroidManifest.xml",'-I',$Jar,'-A',"$Root\assets",'-S',"$Root\res",'-0','mp4','-F',"$Root\build\unsigned.apk",'--version-code','3','--version-name','0.3.0')
+RunChecked "$Bt\aapt.exe" @('package','-f','-M',"$Root\AndroidManifest.xml",'-I',$Jar,'-A',"$Root\assets",'-S',"$Root\res",'-0','mp4','-F',"$Root\build\unsigned.apk",'--version-code','4','--version-name','0.3.1')
 Push-Location "$Root\build\dex"
 try {RunChecked "$Bt\aapt.exe" @('add',"$Root\build\unsigned.apk",'classes.dex')} finally {Pop-Location}
 RunChecked "$Bt\zipalign.exe" @('-f','4',"$Root\build\unsigned.apk", "$Root\build\aligned.apk")

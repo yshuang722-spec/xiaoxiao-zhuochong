@@ -29,6 +29,15 @@ final class CompactPanel {
     }
 
     static void showComposer(Dialog dialog, Context context, PetService.Pet pet, String title) {
+        dialog.setCanceledOnTouchOutside(true);
+        dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH);
+        dialog.getWindow().getDecorView().setOnTouchListener((view, event) -> {
+            if (event.getActionMasked() == android.view.MotionEvent.ACTION_OUTSIDE) {
+                dialog.dismiss();
+                return true;
+            }
+            return false;
+        });
         show(dialog, context, pet, title, false, true);
     }
 

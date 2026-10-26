@@ -105,7 +105,7 @@ final class Apple {
     static GradientDrawable shape(Context c,int color,int radius) {
         GradientDrawable d=rawShape(c,color,radius); shapes.put(d,true); if(color==PANEL||color==BACK){materials.put(d,color==PANEL?1:2);material(d);} return d;
     }
-    static void material(GradientDrawable d){Integer role=materials.get(d);if(role!=null){int color=role==1?PANEL:BACK;d.setColor(FrostedPanel.available()?FrostedPanel.tint(color,role==1?72:48):color);if(d instanceof GlassSurface)((GlassSurface)d).glass(FrostedPanel.available());}}
+    static void material(GradientDrawable d){Integer role=materials.get(d);if(role!=null){int color=role==1?PANEL:BACK;d.setColor(FrostedPanel.available()?FrostedPanel.tint(color,role==1?(dark?76:96):(dark?44:56)):color);if(d instanceof GlassSurface)((GlassSurface)d).glass(FrostedPanel.available());}}
     static void refreshMaterials(){for(GradientDrawable d:new ArrayList<>(materials.keySet()))if(d!=null)material(d);}
     static void button(Button b,boolean primary) {
         Context c=b.getContext(); b.setAllCaps(false); b.setTextSize(15);
