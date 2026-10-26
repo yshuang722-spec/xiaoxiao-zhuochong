@@ -3,7 +3,7 @@
     {
       "id": "character5",
       "name": "黑毛小狐狸",
-      "size": 462,
+      "size": 280,
       "balanceEnabled": false,
       "whisperEnabled": false,
       "workStatusEnabled": false,
@@ -51,7 +51,11 @@
           "东张西望",
           "追蝴蝶",
           "不许碰尾巴",
-          "耳朵也不许摸"
+          "耳朵也不许摸",
+          "开心小跳",
+          "打喷嚏",
+          "仔细观察",
+          "突然警觉"
         ],
         "noMirror": false
       }
@@ -79,5 +83,9 @@
     "ceilingBounce": true,
     "throwPower": 1,
     "petCollision": true
+  },
+  "eventsRefreshSec": {
+    "balance": 1800,
+    "whisper": 300
   }
 }

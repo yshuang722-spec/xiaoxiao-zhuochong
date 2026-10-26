@@ -1,8 +1,39 @@
 # 小小桌宠
 
-Windows 桌面宠物客户端，当前版本 **v1.0.4（2026-10-23）**。
+Windows 桌面宠物客户端，当前版本 **v1.0.5**。
 
 基于 **[PC2005-cloud](https://github.com/PC2005-cloud)** 的 **[dsh-pet](https://github.com/PC2005-cloud/dsh-pet)** 改造，感谢原作者提供桌宠引擎，保留原 MIT 许可。新增角色、动画和图标由本项目作者创作。
+
+## Windows 下载
+
+**[下载最新版完整客户端 Windows 64位 解压即用](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/latest/download/xiaoxiao-zhuochong-win-x64-portable.zip)**
+
+新用户右键“全部解压”，进入“小小桌宠”文件夹，双击“小小桌宠.exe”。保留完整文件夹，无需另装 Node、npm 或 Python。
+
+**[已有客户端 下载 v1.0.5 更新包](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/v1.0.5/xiaoxiao-zhuochong-1.0.5-update.zip)** · [更新步骤与常见问题](docs/UPDATE-1.0.5.md)
+
+完整解压更新包，从托盘退出桌宠，双击 update.cmd，选择原程序 EXE 所在文件夹；完成后用原快捷方式启动。适用于官方 v1.0.3、v1.0.4。
+
+## 本版内容
+
+六个角色、167段已收录动作，包含奶茶千金与近期新增动作，保留人物大小和脚底对齐处理。
+
+- 蓝毛小女仆：106 段。
+- 橙毛大小姐：19 段。
+- 黄毛该溜子：12 段。
+- 白毛小龙娘：12 段。
+- 黑毛小狐狸：8 段。
+- 奶茶千金：10 段。
+
+- 角色独立显示与隐藏，支持全部开启、全部隐藏。
+- 小动作点播和轮播、拖动弹跳、角色间碰撞、播放错误与停滞恢复。
+- 每个角色最多额外添加8个分身，在原角色的分身管理内操作；本体及分身可独立调大小。
+- 各角色的人设与聊天历史分开保存，共用用户设置的 AI 接口；持续对话窗口和头顶回复气泡。
+- 更新界面与托盘使用当前角色图标，保留已有客户端的对话和设置入口。
+- 角色运行及调整日志，自动清理超过十天的旧日志。
+- 关闭控制页后宠物继续运行，通过托盘重新打开或退出全部。
+
+角色数据位于 `%USERPROFILE%\.dsh\dsh-pet\characters`。
 
 ## 安卓手机版
 
@@ -12,34 +43,13 @@ Windows 桌面宠物客户端，当前版本 **v1.0.4（2026-10-23）**。
 
 安卓手机版与下方 Windows 版分别下载、分别安装；Windows 更新包不适用于安卓。暂未提供安卓自动更新。
 
-## 下载
-
-**[下载最新版完整客户端（Windows 64位，解压即用）](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/latest/download/xiaoxiao-zhuochong-win-x64-portable.zip)**
-
-新用户：右键“全部解压”，打开“小小桌宠”文件夹，双击“小小桌宠.exe”。内含运行环境，不必安装 Node、npm 或 Python；不要只移动一个 EXE。
-
-**[v1.0.3 用户下载更新包](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/download/v1.0.4/xiaoxiao-zhuochong-1.0.4-update-from-1.0.3.zip)**：[更新步骤](docs/UPDATE-1.0.4.md)。完整解压，双击 update.cmd，选择原程序 EXE 所在文件夹，完成后使用原快捷方式启动。
-
-## 本版内容
-
-包含蓝毛小女仆、橙毛大小姐、黄毛该溜子、白毛小龙娘、黑毛小狐狸五个角色，补齐现有动作并加入最新对齐修正。奶茶千金尚未完成，本版不包含。
-
-- 角色独立开启、隐藏，支持全部开启和全部隐藏。
-- 每个角色最多额外添加8个分身，本体不计入上限；分身共用原角色素材。
-- 分身收纳在原角色的“分身管理”二级菜单中，可独立显示、隐藏、点播动作和移除。
-- 本体与每个分身均可独立调整显示大小，支持滑块、数值输入、应用和恢复默认，设置保存后继续沿用。
-- 动作点播与轮播、拖拽弹动、角色碰撞、播放错误恢复。
-- 角色独立人设和聊天历史，共用用户自己设置的模型接口；AI 设置位于二级菜单。
-- 宠物旁持续对话窗口、头顶回复气泡与大小姐的对话动作。
-- 角色运行及调整日志，自动清理超过十天的旧日志。
-- 关闭控制页后宠物继续运行；从托盘重新打开或退出全部。
-
-数据位于 `%USERPROFILE%\.dsh\dsh-pet\characters`。
 
 ## 源码与构建
 
-客户端源码在 `client/`，角色配置、动画及人设在 `characters/`。实际发布的引擎 JavaScript 源码在 `dsh-pet/lib/` 和 `dsh-pet/runtime/`；同时保留原项目 TypeScript 源码。当前客户端集成改动包含在实际发布的 JavaScript 中，直接重编原 TypeScript 会覆盖这些集成改动。
+Windows 客户端在 `client/`，六角色配置、成品动画和人设在 `characters/`。实际运行的引擎 JavaScript 在 `dsh-pet/lib/` 与 `dsh-pet/runtime/`，同时保留原 TypeScript 源码；直接重编原 TypeScript 会覆盖本项目已有集成改动。
 
-使用 `tools/client-release/build-1.0.4.py` 配合本机已有 Electron 和 Node 可打包完整运行目录；原 NSIS 脚本仍保留。GitHub 自动生成的 Source code 是源码，使用者应下载上面的完整客户端 ZIP。
+安卓当前已发布版本的完整源码和成品素材在 `android/`，构建方法见 [Android BUILD](android/BUILD.md)。安卓与 Windows 分别发布和安装。
 
-本版已通过隔离用户目录启动、五角色待机预览、更新器保留设置及自定义动作、重复更新、故障回滚、篡改包拒绝和归档完整性检查。不同设备的长期播放表现仍需实际使用反馈。
+Windows 可使用 `tools/client-release/build-1.0.5.py` 配合已有 Electron 与 Node 运行环境构建。GitHub 自动生成的 Source code 是源码；直接使用请下载上面的完整客户端 ZIP。
+
+[完整使用步骤与常见问题](使用说明.md) · [本版动作列表](docs/RELEASE-CONTENT-1.0.5.json)

@@ -1,9 +1,9 @@
 {
   "pets": [
     {
-      "id": "ojousama1",
+      "id": "ojousama",
       "name": "橙毛大小姐",
-      "size": 462,
+      "size": 280,
       "balanceEnabled": true,
       "whisperEnabled": false,
       "workStatusEnabled": false,
@@ -96,5 +96,9 @@
     "ceilingBounce": true,
     "throwPower": 1,
     "petCollision": true
+  },
+  "eventsRefreshSec": {
+    "balance": 1800,
+    "whisper": 300
   }
 }

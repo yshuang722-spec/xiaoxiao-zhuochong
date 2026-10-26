@@ -56,3 +56,8 @@ work/
 *.log
 .env
 .env.*
+
+# Android local build and signing outputs
+android/build/
+*.keystore
+*.jks

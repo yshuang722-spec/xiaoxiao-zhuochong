@@ -3,7 +3,7 @@
     {
       "id": "main",
       "name": "蓝毛小女仆",
-      "size": 462,
+      "size": 280,
       "balanceEnabled": true,
       "whisperEnabled": true,
       "workStatusEnabled": true,
@@ -16,14 +16,6 @@
       }
     }
   ],
-  "physics": {
-    "gravity": 1400,
-    "restitution": 0.78,
-    "groundFriction": 2.5,
-    "ceilingBounce": true,
-    "throwPower": 1,
-    "petCollision": true
-  },
   "animations": {
     "idle": [
       "待机呼吸休闲"
@@ -212,5 +204,17 @@
     "idle": 10,
     "turn": 5,
     "move": 5
+  },
+  "physics": {
+    "gravity": 1400,
+    "restitution": 0.78,
+    "groundFriction": 2.5,
+    "ceilingBounce": true,
+    "throwPower": 1,
+    "petCollision": true
+  },
+  "eventsRefreshSec": {
+    "balance": 1800,
+    "whisper": 300
   }
 }

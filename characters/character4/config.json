@@ -3,7 +3,7 @@
     {
       "id": "character4",
       "name": "白毛小龙娘",
-      "size": 462,
+      "size": 280,
       "balanceEnabled": false,
       "whisperEnabled": false,
       "workStatusEnabled": false,
@@ -57,7 +57,9 @@
           "提裙转圈",
           "喷火冒烟",
           "额度耗尽",
-          "变身Astra形态[非满血版本]"
+          "变身Astra形态[非满血版本]",
+          "可爱捏",
+          "起风了"
         ],
         "noMirror": false
       }
@@ -85,5 +87,9 @@
     "ceilingBounce": true,
     "throwPower": 1,
     "petCollision": true
+  },
+  "eventsRefreshSec": {
+    "balance": 1800,
+    "whisper": 300
   }
 }
