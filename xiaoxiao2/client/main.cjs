@@ -24,7 +24,7 @@ if(!app.requestSingleInstanceLock()){app.quit();}else if(process.argv.includes('
   service.setChatBridge(chatBridge.env);app.once('before-quit',()=>chatBridge.close());
   try{await service.ensureServer();}catch(e){dialog.showErrorBox('桌宠启动失败',e.message);app.quit();return;}
   try{const {startRoleAudit}=require(path.join(service.PACKAGE,'runtime/electron-helper/role-log.js'));const stopAudit=startRoleAudit({root:service.ROOT});app.once('before-quit',stopAudit);}catch(e){console.error('[pet-log] audit start failed:',e.message);}
-  try{const broker=require(path.join(service.PACKAGE,'runtime/electron-helper/collision-link.cjs')).startBroker();broker.ready.catch(e=>console.error('[collision]',e.message));app.once('before-quit',()=>{void broker.close();});}catch(e){console.error('[collision] start failed:',e.message);}
+  try{const broker=require(path.join(service.PACKAGE,'runtime/electron-helper/collision-link.cjs')).startBroker({home:service.HOME});broker.ready.catch(e=>console.error('[collision]',e.message));app.once('before-quit',()=>{void broker.close();});}catch(e){console.error('[collision] start failed:',e.message);}
   const stopWatch=require('./fullscreen-watch.cjs').watchFullscreen(onFullscreen);app.once('before-quit',stopWatch);
   window=new BrowserWindow({width:1100,height:780,minWidth:800,minHeight:620,title:'小小桌宠2',backgroundColor:'#fbf7f1',autoHideMenuBar:true,show:false,icon:path.join(__dirname,'assets/app.ico'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   window.setMenu(null);window.webContents.setWindowOpenHandler(()=>({action:'deny'}));
