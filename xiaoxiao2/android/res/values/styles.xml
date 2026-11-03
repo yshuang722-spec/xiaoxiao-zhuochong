@@ -1,0 +1,42 @@
+<resources>
+ <style name="GlassDialogLight" parent="android:style/Theme.Material.Light.Dialog.Alert">
+  <item name="android:windowIsTranslucent">true</item>
+  <item name="android:windowIsFloating">true</item>
+  <item name="android:windowBackground">@android:color/transparent</item>
+ </style>
+ <style name="GlassDialogDark" parent="android:style/Theme.Material.Dialog.Alert">
+  <item name="android:windowIsTranslucent">true</item>
+  <item name="android:windowIsFloating">true</item>
+  <item name="android:windowBackground">@android:color/transparent</item>
+ </style>
+ <style name="PanelMotion">
+  <item name="android:windowEnterAnimation">@anim/panel_enter</item>
+  <item name="android:windowExitAnimation">@anim/panel_exit</item>
+ </style>
+ <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+  <item name="android:windowIsTranslucent">true</item>
+  <item name="android:forceDarkAllowed">false</item>
+  <item name="android:fontFamily">sans-serif</item>
+  <item name="android:colorAccent">#0065DC</item>
+  <item name="android:windowLightStatusBar">true</item>
+  <item name="android:statusBarColor">#F2F2F7</item>
+  <item name="android:navigationBarColor">#F2F2F7</item>
+  <item name="android:colorButtonNormal">#EBF3FF</item>
+  <item name="android:windowActionModeOverlay">true</item>
+  <item name="android:windowBackground">@android:color/transparent</item>
+  <item name="android:windowDisablePreview">true</item>
+ </style>
+ <style name="AppThemeDark" parent="android:style/Theme.Material.NoActionBar">
+  <item name="android:windowIsTranslucent">true</item>
+  <item name="android:forceDarkAllowed">false</item>
+  <item name="android:fontFamily">sans-serif</item>
+  <item name="android:colorAccent">#8FBFFF</item>
+  <item name="android:windowLightStatusBar">false</item>
+  <item name="android:statusBarColor">#101014</item>
+  <item name="android:navigationBarColor">#101014</item>
+  <item name="android:colorButtonNormal">#19304D</item>
+  <item name="android:windowActionModeOverlay">true</item>
+  <item name="android:windowBackground">@android:color/transparent</item>
+  <item name="android:windowDisablePreview">true</item>
+ </style>
+</resources>

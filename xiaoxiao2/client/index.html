@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self' file:; style-src 'self'; script-src 'self'; connect-src 'none'"><title>小小桌宠2</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="theme.css"></head>
+<body>
+<aside><div class="brand"><img src="assets/app.png" width="42" height="42" alt=""><span>小小桌宠2</span></div><p class="aside-caption">让喜欢的角色<br>陪在桌面上。</p><nav><button class="nav-current" aria-current="page" data-page="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v13H3zM8 21h8m-4-4v4"/></svg>我的角色</button><button id="open-prefs" data-page="prefs"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M4.9 4.9l2.1 2.1m10 10 2.1 2.1M2 12h3m14 0h3M4.9 19.1 7 17m10-10 2.1-2.1"/></svg>偏好设置</button></nav><button id="logo-button" class="artemis-logo" aria-label="查看 Artemis 阿尔忒弥斯计划标志大图"><img class="logo-light" src="assets/logo-light-sq.png" alt=""><img class="logo-dark" src="assets/logo-dark-sq.png" alt=""></button><div class="aside-bottom"><span class="connection-dot"></span><span id="connection">正在连接…</span></div></aside>
+<main id="home">
+<header><div><h1>我的角色</h1><p>选择今天陪伴你的角色。</p></div><button id="import" class="primary"><span aria-hidden="true">＋</span> 添加角色</button></header>
+<div class="toolbar"><span id="summary">正在读取角色…</span><div class="toolbar-actions"><div class="segmented" role="group" aria-label="全部角色"><button id="show-all">全部开启</button><button id="hide-all">全部隐藏</button></div><button id="edit-order" class="pill" aria-pressed="false">编辑顺序</button></div></div>
+<p id="edit-hint" class="edit-hint" hidden>按住卡片名字旁的 ⠿ 拖到想要的位置，或点 ↑ ↓ 挪一格。调好后点「完成」。</p>
+<section id="characters" aria-label="角色列表"><p class="loading"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>正在叫醒角色们…</p></section>
+<footer><span>关闭控制页后，宠物会继续运行。可从系统托盘重新打开。</span></footer>
+</main>
+<main id="prefs-page" hidden>
+<header><div><h1>偏好设置</h1><p>这些设置对所有角色生效。</p></div></header>
+<h2 class="group-title">桌面互动</h2>
+<div class="group">
+<div class="row"><div class="row-text"><span class="row-label">角色碰撞</span><span class="row-note">开启后，被甩出去的角色撞到其他角色会互相弹开。</span></div><button id="collision" class="switch" role="switch" aria-checked="false" aria-label="角色碰撞"></button></div>
+<div class="row"><div class="row-text"><span class="row-label">全屏时自动让开</span><span class="row-note">看视频、玩游戏等全屏时，桌面上的角色先躲起来，退出全屏后自动回来。</span></div><button id="auto-away" class="switch" role="switch" aria-checked="true" aria-label="全屏时自动让开"></button></div>
+</div>
+<h2 class="group-title">外观</h2>
+<div class="group">
+<div class="row"><div class="row-text"><span class="row-label">深浅色</span></div><div class="segmented" role="radiogroup" aria-label="深浅色" id="theme-choice"><button data-value="auto" role="radio">跟随系统</button><button data-value="light" role="radio">浅色</button><button data-value="dark" role="radio">深色</button></div></div>
+<div class="row"><div class="row-text"><span class="row-label">文字大小</span></div><div class="segmented" role="radiogroup" aria-label="文字大小" id="zoom-choice"><button data-value="1" role="radio">标准</button><button data-value="1.1" role="radio">大</button><button data-value="1.2" role="radio">特大</button></div></div>
+</div>
+<h2 class="group-title">角色列表</h2>
+<div class="group">
+<button id="refresh" class="row row-button"><span class="row-label">重新读取角色</span><span class="chevron" aria-hidden="true">›</span></button>
+<button id="replay-guide" class="row row-button"><span class="row-label">再看一次新手引导</span><span class="chevron" aria-hidden="true">›</span></button>
+</div>
+<h2 class="group-title">桌宠</h2>
+<div class="group">
+<button id="quit" class="row row-button danger"><span class="row-label">退出全部桌宠</span><span class="row-note" id="quit-note">桌面上的所有角色都会离开</span></button>
+</div>
+</main>
+<div id="logo-view" class="logo-view" hidden><img alt="Artemis 阿尔忒弥斯计划"></div>
+<div id="feedback" class="toast" role="status" aria-live="polite"></div>
+<dialog id="guide" class="guide" aria-labelledby="guide-title">
+<div class="guide-art" aria-hidden="true"><img src="assets/app.png" alt=""></div>
+<div class="guide-steps">
+<section class="guide-step"><h2 id="guide-title">欢迎来到小小桌宠2</h2><p>在「我的角色」里打开开关，角色就会出现在桌面上陪你。</p></section>
+<section class="guide-step" hidden><h2>拖住它，甩出去</h2><p>按住桌面上的角色可以拖动，用力一甩它会飞出去、落地弹跳。</p></section>
+<section class="guide-step" hidden><h2>让它们撞在一起</h2><p>在「偏好设置」打开角色碰撞，把一个角色甩向另一个，它们会互相弹开。右键角色还有更多动作。</p></section>
+</div>
+<div class="guide-foot"><div class="guide-dots" aria-hidden="true"><i></i><i></i><i></i></div><button id="guide-skip" class="quiet">跳过</button><button id="guide-next" class="primary" autofocus>下一步</button></div>
+</dialog>
+<script src="profile-renderer.js"></script><script src="renderer.js"></script><script src="ai-renderer.js"></script></body></html>

@@ -4,6 +4,10 @@ Windows 桌面宠物客户端，当前版本 **v1.0.5**。
 
 基于 **[PC2005-cloud](https://github.com/PC2005-cloud)** 的 **[dsh-pet](https://github.com/PC2005-cloud/dsh-pet)** 改造，感谢原作者提供桌宠引擎，保留原 MIT 许可。新增角色、动画和图标由本项目作者创作。
 
+## 小小桌宠2
+
+八角色的第二版，含电脑版安装包和手机版 0.4.0：见 [xiaoxiao2/](xiaoxiao2/README.md) 与 [发布页](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/tag/xiaoxiao2-v1.0.0)。
+
 ## Windows 下载
 
 **[下载最新版完整客户端 Windows 64位 解压即用](https://github.com/yshuang722-spec/xiaoxiao-zhuochong/releases/latest/download/xiaoxiao-zhuochong-win-x64-portable.zip)**
