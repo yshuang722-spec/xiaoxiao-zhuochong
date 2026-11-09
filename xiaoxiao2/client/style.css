@@ -29,3 +29,56 @@ nav button:not([aria-current]){background:transparent;color:var(--muted)}
 
 .title-row{gap:8px}.mover{display:inline-flex;align-items:center;gap:4px;margin-left:auto;margin-right:8px}.grip{cursor:grab;user-select:none;color:var(--muted);font-size:18px;padding:0 4px}.reorder{min-width:28px;padding:2px 6px}.character.dragging{opacity:.5}.character.drop-target{outline:2px dashed var(--accent);outline-offset:-4px}
 #collision.on{color:var(--accent);font-weight:600}
+
+/* 轮播编排（每个角色卡「轮播编排」按钮打开的对话框） */
+.pl-dialog{width:min(640px,calc(100vw - 48px));max-height:calc(100vh - 56px);padding:0;border:0;border-radius:30px;background:var(--card,#fff);color:var(--ink,#3d2b3f);box-shadow:0 0 0 1px var(--line),0 8px 0 var(--edge,#ead6d9),0 30px 80px #3d2b3f33;overflow:hidden}
+.pl-dialog[open]{display:flex;flex-direction:column;animation:pl-in .42s cubic-bezier(.34,1.56,.64,1)}
+.pl-dialog::backdrop{background:#3d2b3f55;backdrop-filter:blur(4px)}
+@keyframes pl-in{from{opacity:0;transform:translateY(18px) scale(.95)}}
+.pl-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 26px 12px}
+.pl-head h2{margin:0 0 4px;font-size:22px}.pl-head p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.6}
+.pl-body{flex:1;min-height:0;overflow-y:auto;padding:0 22px 8px}
+.pl-switch-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 6px}
+.pl-sub{margin:14px 6px 8px;font-size:14px;font-weight:800}.pl-sub small{font-weight:600;font-size:12px;color:var(--muted);margin-left:6px}
+.pl-list{position:relative;border-radius:20px;background:var(--card,#fff);box-shadow:0 0 0 1px var(--line),0 4px 0 var(--edge,#ead6d9);padding:4px 0}
+.pl-item{position:relative;background:var(--card,#fff)}
+.pl-item+.pl-item{border-top:2px dashed var(--line)}
+.pl-item.dragging{z-index:5;border-radius:16px;box-shadow:0 0 0 2px var(--grape,#8c6cf0),0 12px 28px #3d2b3f33;border-top-color:transparent;transition:none!important;cursor:grabbing}
+.pl-item.dragging+.pl-item{border-top-color:transparent}
+.pl-row{display:flex;align-items:center;gap:10px;min-height:54px;padding:8px 14px 8px 10px}
+.pl-grip{flex:none;width:26px;text-align:center;font-size:20px;color:#b9a7bd;cursor:grab;touch-action:none;user-select:none;border-radius:8px;line-height:34px}
+.pl-grip:hover{background:#efe8ff;color:#6a52c9}
+.pl-no{flex:none;width:28px;height:28px;border-radius:50%;background:var(--orange,#ff8b3d);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center}
+.pl-name{flex:1;min-width:0;font-weight:800;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-tools-inline{flex:none;display:flex;gap:6px}
+.pl-btn{border:0;border-radius:999px;min-width:36px;height:34px;padding:0 12px;font-weight:800;font-size:13px;cursor:pointer;background:#f6eee9;color:var(--ink,#342f2b);transition:background .15s,transform .15s}
+.pl-btn:hover:not(:disabled){background:#ffe6d6;color:var(--orange-deep,#e2661a)}.pl-btn:active:not(:disabled){transform:scale(.92)}
+.pl-btn:disabled{opacity:.3;cursor:default}
+.pl-picker{display:flex;flex-wrap:wrap;gap:8px;padding:2px 14px 14px 46px}
+.pl-picker-title{flex-basis:100%;font-size:12px;color:var(--muted)}
+.pl-chip{padding:6px 14px;min-height:32px}
+.pl-empty{margin:0;padding:18px 20px;color:var(--muted);font-size:13px}
+.pl-pool{display:flex;flex-wrap:wrap;gap:8px;padding:2px 4px 10px}
+.pl-pool-chip{padding:7px 14px;min-height:34px;transition:transform .15s var(--spring,ease)}
+.pl-pool-chip:active{transform:scale(.93)}
+.pl-pool-chip.used{background:var(--mint-soft,#dcf6ec);color:var(--mint-deep,#25a678)}
+.pl-pool-chip em{font-style:normal;margin-left:6px;font-weight:900}
+.pl-foot{display:flex;align-items:center;gap:8px;padding:12px 22px 18px;border-top:2px dashed var(--line)}
+.pl-foot #pl-status{flex:1;font-size:12px;color:var(--muted)}.pl-foot .pl-error,#pl-status.pl-error{color:#b3261e}
+@media (prefers-reduced-motion:reduce){.pl-dialog[open]{animation:none}}
+.pl-item{user-select:none;-webkit-user-select:none;cursor:grab}
+.pl-item .pl-btn{cursor:pointer}
+.pl-item.pressing{background:#fff8f3;transition:background .2s}
+.pl-item.pressing .pl-row,.pl-item.dragging .pl-row{cursor:grabbing}
+
+.pl-head .quiet{white-space:nowrap;flex:none}
+
+.ig-dialog{width:min(720px,calc(100vw - 48px))}
+.ig-body{padding-bottom:12px}
+.ig-tree,.ig-code{margin:4px 6px 10px;padding:12px 16px;border-radius:16px;background:#fff6f2;color:#5b4033;font:13px/1.7 "Cascadia Mono",Consolas,"Microsoft YaHei UI",monospace;white-space:pre;overflow-x:auto}
+.ig-code{max-height:230px;overflow:auto;font-size:12px;line-height:1.55}
+.ig-list{margin:2px 6px 8px;padding-left:20px;font-size:13px;line-height:1.75;color:var(--ink,#3d2b3f)}
+.ig-list code,.ig-tip code{padding:1px 6px;border-radius:8px;background:#fff0ea;color:#8b5a44;font:12px Consolas,monospace}
+.ig-tip{margin:6px 6px 4px;font-size:12.5px;line-height:1.7;color:var(--muted)}
+.ig-copy{padding:4px 12px;min-height:28px;margin-left:8px;font-size:12px;vertical-align:middle}
+.pl-foot .primary{margin-left:auto}

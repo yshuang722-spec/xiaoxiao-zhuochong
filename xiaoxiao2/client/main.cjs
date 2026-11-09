@@ -53,6 +53,10 @@ if(!app.requestSingleInstanceLock()){app.quit();}else if(process.argv.includes('
   handle('characters:set-collision',on=>service.setCollision(on));
   handle('characters:reorder',entries=>service.reorder(entries).then(publishRoles));
   handle('characters:toggle',(id,visible)=>service.toggle(id,visible));
+  handle('groups:get',entry=>service.groups(entry));
+  handle('groups:set',(entry,input)=>service.setGroups(entry,input));
+  handle('playlist:get',entry=>service.playlist(entry));
+  handle('playlist:set',(entry,input)=>service.setPlaylist(entry,input));
   handle('characters:play',(id,name)=>service.play(id,name));
   handle('characters:profile',async id=>{const h=await ai.history(id);return {name:h.name,prompt:h.prompt};});
   handle('characters:profile-save',async(id,input)=>{await service.find(id);if(!input||typeof input!=="object")throw Error('资料格式无效');await service.request('/dsh-pet-7340/pet-profile','POST',{id,name:input.name,prompt:input.prompt});return publishRoles(await service.list());});

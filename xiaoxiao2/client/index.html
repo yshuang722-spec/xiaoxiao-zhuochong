@@ -5,8 +5,8 @@
 <aside><div class="brand"><img src="assets/app.png" width="42" height="42" alt=""><span>小小桌宠2</span></div><p class="aside-caption">让喜欢的角色<br>陪在桌面上。</p><nav><button class="nav-current" aria-current="page" data-page="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v13H3zM8 21h8m-4-4v4"/></svg>我的角色</button><button id="open-prefs" data-page="prefs"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M4.9 4.9l2.1 2.1m10 10 2.1 2.1M2 12h3m14 0h3M4.9 19.1 7 17m10-10 2.1-2.1"/></svg>偏好设置</button></nav><button id="logo-button" class="artemis-logo" aria-label="查看 Artemis 阿尔忒弥斯计划标志大图"><img class="logo-light" src="assets/logo-light-sq.png" alt=""><img class="logo-dark" src="assets/logo-dark-sq.png" alt=""></button><div class="aside-bottom"><span class="connection-dot"></span><span id="connection">正在连接…</span></div></aside>
 <main id="home">
 <header><div><h1>我的角色</h1><p>选择今天陪伴你的角色。</p></div><button id="import" class="primary"><span aria-hidden="true">＋</span> 添加角色</button></header>
-<div class="toolbar"><span id="summary">正在读取角色…</span><div class="toolbar-actions"><div class="segmented" role="group" aria-label="全部角色"><button id="show-all">全部开启</button><button id="hide-all">全部隐藏</button></div><button id="edit-order" class="pill" aria-pressed="false">编辑顺序</button></div></div>
-<p id="edit-hint" class="edit-hint" hidden>按住卡片名字旁的 ⠿ 拖到想要的位置，或点 ↑ ↓ 挪一格。调好后点「完成」。</p>
+<div class="toolbar"><span id="summary">正在读取角色…</span><div class="toolbar-actions"><div class="segmented" role="group" aria-label="全部角色"><button id="show-all">全部开启</button><button id="hide-all">全部隐藏</button></div><span class="drag-tip">按住角色卡空白处可拖动换位</span></div></div>
+
 <section id="characters" aria-label="角色列表"><p class="loading"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>正在叫醒角色们…</p></section>
 <footer><span>关闭控制页后，宠物会继续运行。可从系统托盘重新打开。</span></footer>
 </main>
@@ -43,4 +43,4 @@
 </div>
 <div class="guide-foot"><div class="guide-dots" aria-hidden="true"><i></i><i></i><i></i></div><button id="guide-skip" class="quiet">跳过</button><button id="guide-next" class="primary" autofocus>下一步</button></div>
 </dialog>
-<script src="profile-renderer.js"></script><script src="renderer.js"></script><script src="ai-renderer.js"></script></body></html>
+<script src="idle-boxes.js"></script><script src="profile-renderer.js"></script><script src="renderer.js"></script><script src="ai-renderer.js"></script><script src="playlist-renderer.js"></script><script src="groups-renderer.js"></script><script src="import-guide.js"></script><script src="card-drag.js"></script></body></html>

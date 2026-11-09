@@ -4,14 +4,14 @@ import android.app.*;import android.os.*;import android.provider.Settings;import
 
 public class MainActivity extends Activity {
  static boolean active;LinearLayout content;Handler handler=new Handler();boolean renderedDark,renderedOverlay;final Map<String,TextView> roleStates=new HashMap<>();final Map<String,Switch> roleToggles=new HashMap<>();
- public void onCreate(Bundle b){Data.init(this);Apple.load();setTheme(Apple.dark?com.xiaoxiao2.pet.mobile.R.style.AppThemeDark:com.xiaoxiao2.pet.mobile.R.style.AppTheme);super.onCreate(b);FrostedPanel.attachMain(this);getWindow().setStatusBarColor(Apple.BACK);getWindow().setNavigationBarColor(Apple.BACK);getWindow().getDecorView().setSystemUiVisibility(Apple.dark?0:View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);render();if(Build.VERSION.SDK_INT>=33&&checkSelfPermission("android.permission.POST_NOTIFICATIONS")!=0)requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"},1);if(Settings.canDrawOverlays(this)&&Data.instances().length()>0)send("restore",null);}
+ public void onCreate(Bundle b){Data.init(this);Apple.load();setTheme(Apple.dark?com.xiaoxiao.pet.mobile.R.style.AppThemeDark:com.xiaoxiao.pet.mobile.R.style.AppTheme);super.onCreate(b);FrostedPanel.attachMain(this);getWindow().setStatusBarColor(Apple.BACK);getWindow().setNavigationBarColor(Apple.BACK);getWindow().getDecorView().setSystemUiVisibility(Apple.dark?0:View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);render();if(Build.VERSION.SDK_INT>=33&&checkSelfPermission("android.permission.POST_NOTIFICATIONS")!=0)requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"},1);if(Settings.canDrawOverlays(this)&&Data.instances().length()>0)send("restore",null);}
  public void onResume(){super.onResume();active=true;refreshAppearance();PermissionsPanel.refresh();if(PetService.instance!=null)PetService.instance.control(true);handler.postDelayed(()->{if(active&&!isFinishing()&&!isDestroyed())refreshRoleStates();},300);if(content!=null)content.post(this::updateCardVideos);}
  public void onDestroy(){FrostedPanel.releaseMain(this);super.onDestroy();}
  public void onPause(){for(CardVideo c:cardVideos)stopCardVideo(c);if(!isChangingConfigurations()){active=false;if(PetService.instance!=null)PetService.instance.control(false);}super.onPause();}
  public void onConfigurationChanged(android.content.res.Configuration config){super.onConfigurationChanged(config);refreshAppearance();}
  void refreshAppearance(){
   Apple.load();
-  setTheme(Apple.dark?com.xiaoxiao2.pet.mobile.R.style.AppThemeDark:com.xiaoxiao2.pet.mobile.R.style.AppTheme);
+  setTheme(Apple.dark?com.xiaoxiao.pet.mobile.R.style.AppThemeDark:com.xiaoxiao.pet.mobile.R.style.AppTheme);
   getWindow().setStatusBarColor(Apple.BACK);getWindow().setNavigationBarColor(Apple.BACK);
   getWindow().getDecorView().setSystemUiVisibility(Apple.dark?0:View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
   if(content==null||renderedDark!=Apple.dark||renderedOverlay!=Settings.canDrawOverlays(this))render();
@@ -32,9 +32,9 @@ public class MainActivity extends Activity {
   if(keep>0)scroll.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener(){public boolean onPreDraw(){scroll.getViewTreeObserver().removeOnPreDrawListener(this);scroll.scrollTo(0,keep);return true;}});
   // Header: app icon sticker + name, Artemis logo sticker, settings pill.
   LinearLayout nav=new LinearLayout(this);nav.setGravity(Gravity.CENTER_VERTICAL);nav.setClipChildren(false);
-  ImageView icon=new ImageView(this);icon.setImageResource(com.xiaoxiao2.pet.mobile.R.drawable.app_icon);icon.setScaleType(ImageView.ScaleType.FIT_CENTER);icon.setBackground(Sticker.frame(this,13));icon.setPadding(dp(3),dp(3),dp(3),dp(6));icon.setRotation(-4);nav.addView(icon,new LinearLayout.LayoutParams(dp(44),dp(47)));
+  ImageView icon=new ImageView(this);icon.setImageResource(com.xiaoxiao.pet.mobile.R.drawable.app_icon);icon.setScaleType(ImageView.ScaleType.FIT_CENTER);icon.setBackground(Sticker.frame(this,13));icon.setPadding(dp(3),dp(3),dp(3),dp(6));icon.setRotation(-4);nav.addView(icon,new LinearLayout.LayoutParams(dp(44),dp(47)));
   TextView brand=text(getApplicationInfo().loadLabel(getPackageManager()).toString(),22);brand.setTypeface(Typeface.create("sans-serif",Typeface.BOLD));brand.setPadding(dp(12),0,0,0);nav.addView(brand,new LinearLayout.LayoutParams(0,-2,1));
-  ImageView logo=new ImageView(this);logo.setImageResource(Apple.dark?com.xiaoxiao2.pet.mobile.R.drawable.artemis_night:com.xiaoxiao2.pet.mobile.R.drawable.artemis_day);logo.setScaleType(ImageView.ScaleType.FIT_CENTER);logo.setBackground(Sticker.logoFrame(this,12));logo.setPadding(dp(3),dp(3),dp(3),dp(6));logo.setRotation(4);logo.setContentDescription("Artemis 阿尔忒弥斯计划标志，点按查看大图");logo.setOnClickListener(v->showLogo(logo));UiMotion.press(logo);
+  ImageView logo=new ImageView(this);logo.setImageResource(Apple.dark?com.xiaoxiao.pet.mobile.R.drawable.artemis_night:com.xiaoxiao.pet.mobile.R.drawable.artemis_day);logo.setScaleType(ImageView.ScaleType.FIT_CENTER);logo.setBackground(Sticker.logoFrame(this,12));logo.setPadding(dp(3),dp(3),dp(3),dp(6));logo.setRotation(4);logo.setContentDescription("Artemis 阿尔忒弥斯计划标志，点按查看大图");logo.setOnClickListener(v->showLogo(logo));UiMotion.press(logo);
   LinearLayout.LayoutParams logoLayout=new LinearLayout.LayoutParams(dp(44),dp(47));logoLayout.rightMargin=dp(12);nav.addView(logo,logoLayout);
   Button settings=new Button(this);settings.setText("设置");Sticker.pill(settings,false);settings.setOnClickListener(v->settings());nav.addView(settings,new LinearLayout.LayoutParams(-2,dp(40)));content.addView(nav);
   TextView title=text("我的角色",30);title.setTypeface(Typeface.create("sans-serif",Typeface.BOLD));title.setPadding(0,dp(24),0,0);content.addView(title);
@@ -46,10 +46,9 @@ public class MainActivity extends Activity {
   LinearLayout bar=new LinearLayout(this);bar.setGravity(Gravity.CENTER_VERTICAL);bar.setPadding(0,dp(16),0,dp(4));
   LinearLayout seg=Sticker.segmented(this);Button show=new Button(this),hide=new Button(this);show.setText("全部开启");hide.setText("全部隐藏");Sticker.segment(show,false);Sticker.segment(hide,false);seg.addView(show,new LinearLayout.LayoutParams(-2,dp(36)));seg.addView(hide,new LinearLayout.LayoutParams(-2,dp(36)));bar.addView(seg);
   bar.addView(new View(this),new LinearLayout.LayoutParams(0,1,1));
-  Button edit=new Button(this);edit.setText(editing?"完成":"编辑顺序");Sticker.pill(edit,editing);edit.setOnClickListener(v->{editing=!editing;render();});bar.addView(edit,new LinearLayout.LayoutParams(-2,dp(40)));content.addView(bar);
+  TextView tip=text("长按卡片可拖动换位",12);tip.setTextColor(Apple.SECONDARY);bar.addView(tip);content.addView(bar);
   show.setOnClickListener(v->{ArrayList<String> was=new ArrayList<>();for(String id:ids)if(!showing(id))was.add(id);if(was.isEmpty()){toast("所有角色都已经在桌面上了",null,null);return;}send("showAll",null);handler.postDelayed(()->{updateAllRoles();toast("所有角色已开启","撤销",()->hideRoles(was));},300);});
   hide.setOnClickListener(v->{ArrayList<String> was=new ArrayList<>();for(String id:ids)if(showing(id))was.add(id);if(was.isEmpty()){toast("桌面上已经没有角色了",null,null);return;}send("hideAll",null);handler.postDelayed(()->{updateAllRoles();toast("所有角色已隐藏","撤销",()->{for(String id:was)send("show",id);handler.postDelayed(()->updateAllRoles(),300);});},300);});
-  if(editing){TextView hint=text("点卡片上的 ↑ ↓ 调整顺序，调好后点「完成」。",13);hint.setTextColor(Apple.dark?0xffcdbfff:0xff5b44b8);hint.setTypeface(Sticker.medium());hint.setPadding(dp(14),dp(11),dp(14),dp(11));GradientDrawable hb=new GradientDrawable();hb.setCornerRadius(dp(16));hb.setColor(Apple.dark?0xff352a52:0xffefe8ff);hint.setBackground(hb);LinearLayout.LayoutParams hp=new LinearLayout.LayoutParams(-1,-2);hp.topMargin=dp(10);content.addView(hint,hp);}
   int index=0;for(String role:ids)card(role,index++);content.post(this::updateCardVideos);
   TextView footer=text("离开控制页，陪伴继续。\n长按桌面上的角色，可打开动作与对话。",12);footer.setTextColor(Apple.SECONDARY);footer.setGravity(Gravity.CENTER);footer.setLineSpacing(dp(4),1);footer.setPadding(0,dp(26),0,0);content.addView(footer);FrostedPanel.refresh();
  }
@@ -69,15 +68,39 @@ public class MainActivity extends Activity {
   LinearLayout titleRow=new LinearLayout(this);titleRow.setGravity(Gravity.CENTER_VERTICAL);
   LinearLayout nameBox=column();TextView name=text(Data.name(role),19);name.setTypeface(Typeface.create("sans-serif",Typeface.BOLD));name.setMaxLines(1);name.setEllipsize(android.text.TextUtils.TruncateAt.END);nameBox.addView(name);
   View colorBar=new View(this);GradientDrawable cb=new GradientDrawable();cb.setCornerRadius(dp(5));cb.setColor(tint);colorBar.setBackground(cb);LinearLayout.LayoutParams cbp=new LinearLayout.LayoutParams(dp(24),dp(5));cbp.topMargin=dp(6);nameBox.addView(colorBar,cbp);titleRow.addView(nameBox,new LinearLayout.LayoutParams(0,-2,1));
-  if(editing){ArrayList<String> order=Data.orderedIds();int pos=order.indexOf(role);for(int d=-1;d<=1;d+=2){final int delta=d;boolean ok=d<0?pos>0:pos<order.size()-1;Button m=new Button(this);m.setText(d<0?"↑":"↓");m.setContentDescription(Data.name(role)+(d<0?"前移一位":"后移一位"));Sticker.circle(m);m.setEnabled(ok);m.setAlpha(ok?1f:.35f);LinearLayout.LayoutParams cell=new LinearLayout.LayoutParams(dp(38),dp(41));cell.rightMargin=dp(6);titleRow.addView(m,cell);m.setOnClickListener(v->{Data.moveRole(role,delta);render();});}}
   Switch toggle=new Switch(this);toggle.setShowText(false);toggle.setChecked(on);toggle.setContentDescription((on?"隐藏":"显示")+Data.name(role));Sticker.styleSwitch(toggle);toggle.setOnCheckedChangeListener((b,checked)->{if(!syncing)setRole(role,checked);});LinearLayout.LayoutParams tp=new LinearLayout.LayoutParams(-2,dp(44));tp.leftMargin=dp(4);titleRow.addView(toggle,tp);roleToggles.put(role,toggle);
   body.addView(titleRow);
   TextView detail=text(Data.role(role).optJSONObject("files").length()+" 个动作",13);detail.setTextColor(Apple.SECONDARY);detail.setTypeface(Sticker.medium());detail.setPadding(0,dp(10),0,0);body.addView(detail);
   LinearLayout.LayoutParams dl=new LinearLayout.LayoutParams(-1,dp(2));dl.topMargin=dp(14);dl.bottomMargin=dp(12);body.addView(Sticker.dashed(this),dl);
   LinearLayout actions=new LinearLayout(this);String[] labels={"对话","管理"};for(int j=0;j<2;j++){final int item=j;Button b=new Button(this);b.setText(labels[j]);Sticker.chipButton(b);LinearLayout.LayoutParams cell=new LinearLayout.LayoutParams(-2,dp(38));if(j>0)cell.leftMargin=dp(8);actions.addView(b,cell);b.setOnClickListener(v->{if(item==0)Chat.show(this,role,role);else manage(role);});}
-  body.addView(actions);card.addView(body);roleCards.put(role,card);
+  body.addView(actions);card.addView(body);roleCards.put(role,card);attachCardDrag(card,role);
   if(role.equals(hopId)){hopId=null;card.post(()->UiMotion.hop(card));}
-  if(editing){android.animation.Animator a=UiMotion.jiggle(card,index);if(a!=null)jiggles.add(a);}
+ }
+
+ // 长按角色卡后直接拖动换位：被抓的卡片浮起跟手，其余卡片顺滑让位，松手后弹性落位；靠近屏幕上下缘自动滚动。
+ void attachCardDrag(final View card,final String role){
+  final float[] st=new float[4];final boolean[] on=new boolean[1];final int[] from=new int[1],to=new int[1];
+  final ArrayList<View> slots=new ArrayList<>();final float[] stride=new float[1];final int slop=android.view.ViewConfiguration.get(this).getScaledTouchSlop();
+  final Runnable follow=()->{if(!on[0])return;View first=slots.get(0),last=slots.get(slots.size()-1);float h=card.getHeight();
+   float dy=st[3]-st[1]+(pageScroll.getScrollY()-st[2]);float min=first.getTop()-card.getTop(),max=last.getTop()+last.getHeight()-card.getTop()-h;dy=Math.max(min,Math.min(max,dy));card.setTranslationY(dy);
+   float center=card.getTop()+dy+h/2;int t=0;for(int k=0;k<slots.size();k++)if(center>slots.get(k).getTop()+slots.get(k).getHeight()/2f)t=k;
+   if(t!=to[0]){to[0]=t;card.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK);for(int k=0;k<slots.size();k++){View c=slots.get(k);if(c==card)continue;float shift=from[0]<t&&k>from[0]&&k<=t?-stride[0]:from[0]>t&&k<from[0]&&k>=t?stride[0]:0;c.animate().translationY(shift).setDuration(200).setInterpolator(new android.view.animation.DecelerateInterpolator(2f)).start();}}};
+  final Runnable auto=new Runnable(){public void run(){if(!on[0])return;int[] loc=new int[2];pageScroll.getLocationOnScreen(loc);float top=loc[1],bot=loc[1]+pageScroll.getHeight(),edge=dp(96);int d=0;
+   if(st[3]<top+edge)d=-(int)(dp(9)*Math.min(1f,(top+edge-st[3])/edge));else if(st[3]>bot-edge)d=(int)(dp(9)*Math.min(1f,(st[3]-(bot-edge))/edge));
+   if(d!=0){pageScroll.scrollBy(0,d);follow.run();}handler.postDelayed(this,16);}};
+  final Runnable arm=()->{ArrayList<String> ids=Data.orderedIds();slots.clear();for(String id:ids){View v=roleCards.get(id);if(v==null){slots.clear();return;}slots.add(v);}
+   if(slots.size()<2)return;from[0]=ids.indexOf(role);to[0]=from[0];stride[0]=card.getHeight()+dp(18);on[0]=true;
+   pageScroll.requestDisallowInterceptTouchEvent(true);card.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS);card.setTranslationZ(dp(14));
+   card.animate().scaleX(1.03f).scaleY(1.03f).setDuration(140).start();handler.post(auto);};
+  card.setOnTouchListener((v,e)->{switch(e.getActionMasked()){
+   case android.view.MotionEvent.ACTION_DOWN:st[0]=e.getRawX();st[1]=e.getRawY();st[2]=pageScroll.getScrollY();st[3]=e.getRawY();handler.postDelayed(arm,360);return true;
+   case android.view.MotionEvent.ACTION_MOVE:st[3]=e.getRawY();if(!on[0]){if(Math.abs(e.getRawX()-st[0])>slop||Math.abs(e.getRawY()-st[1])>slop)handler.removeCallbacks(arm);return true;}pageScroll.requestDisallowInterceptTouchEvent(true);follow.run();return true;
+   case android.view.MotionEvent.ACTION_UP:case android.view.MotionEvent.ACTION_CANCEL:handler.removeCallbacks(arm);
+    if(on[0]){on[0]=false;handler.removeCallbacks(auto);final int target=to[0],origin=from[0];View slot=slots.get(target);float settle=slot.getTop()-card.getTop()+(target>origin?slot.getHeight()-card.getHeight():0);
+     if(e.getActionMasked()==android.view.MotionEvent.ACTION_CANCEL&&target==origin)settle=0;
+     card.animate().translationY(settle).scaleX(1f).scaleY(1f).setDuration(240).setInterpolator(new android.view.animation.OvershootInterpolator(1.1f)).withEndAction(()->{card.setTranslationZ(0);if(target!=origin){Data.moveRole(role,target-origin);render();}else for(View c:slots)c.setTranslationY(0);}).start();}
+    return true;}
+   return false;});
  }
  // Cards loop each role's idle animation (no tap needed). Only cards on screen hold a player;
  // the sharp still stays underneath until the first frame arrives, then fades out.
@@ -134,7 +157,7 @@ public class MainActivity extends Activity {
   if(root==null)return;FrameLayout f=new FrameLayout(this);f.setBackgroundColor(0x803d2b3f);f.setClickable(true);
   FrameLayout big=new FrameLayout(this);big.setBackground(Sticker.logoFrame(this,36));big.setPadding(dp(7),dp(7),dp(7),dp(12));big.setClickable(true);
   ImageView image=new ImageView(this);BitmapFactory.Options raw=new BitmapFactory.Options();raw.inScaled=false;raw.inPreferredConfig=Bitmap.Config.ARGB_8888;
-  image.setImageBitmap(BitmapFactory.decodeResource(getResources(),Apple.dark?com.xiaoxiao2.pet.mobile.R.drawable.artemis_night:com.xiaoxiao2.pet.mobile.R.drawable.artemis_day,raw));
+  image.setImageBitmap(BitmapFactory.decodeResource(getResources(),Apple.dark?com.xiaoxiao.pet.mobile.R.drawable.artemis_night:com.xiaoxiao.pet.mobile.R.drawable.artemis_day,raw));
   image.setScaleType(ImageView.ScaleType.FIT_CENTER);image.setContentDescription("Artemis 阿尔忒弥斯计划");image.setClipToOutline(true);
   GradientDrawable clip=new GradientDrawable();clip.setCornerRadius(dp(30));clip.setColor(Apple.dark?0xff16113e:Color.WHITE);image.setBackground(clip);big.addView(image,new FrameLayout.LayoutParams(-1,-1));
   int size=Math.min(getResources().getDisplayMetrics().widthPixels-dp(56),dp(420));f.addView(big,new FrameLayout.LayoutParams(size,size+dp(5),Gravity.CENTER));root.addView(f,new FrameLayout.LayoutParams(-1,-1));
@@ -178,6 +201,8 @@ public class MainActivity extends Activity {
    GroupedList.row(profile,"分身管理",v->clones(role)).setEnabled(pet!=null);
    LinearLayout playback=GroupedList.group(l);
    Switch rotation=GroupedList.toggle(playback,"自动轮播小动作",pet!=null&&pet.rotation,(b,on)->{if(pet!=null){pet.rotation=on;service.save();}});rotation.setEnabled(pet!=null);
+   GroupedList.row(playback,"编排轮播动作与顺序",v->new PlaylistPanel(this,role).show());
+   GroupedList.row(playback,"动作分类（待机 / 拖动 / 点击回应）",v->new GroupsPanel(this,role).show());
    LinearLayout danger=GroupedList.group(l);
    Button clear=GroupedList.row(danger,"清空该角色聊天记录",v->new Apple.Builder(this).setMessage("清空此角色的手机聊天记录？").setNegativeButton("取消",null).setPositiveButton("清空",(d,w)->{try{Data.history(role,new JSONArray());}catch(Exception e){Toast.makeText(this,"清空失败",0).show();}}).show());clear.setTextColor(Apple.DANGER);clear.setCompoundDrawables(null,null,null,null);
    ScrollView scroll=new SpringScrollView(this);scroll.addView(l);

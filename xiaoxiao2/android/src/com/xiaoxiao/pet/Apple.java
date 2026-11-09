@@ -98,7 +98,7 @@ final class Apple {
         for (int token : palette()) if (color == token) return true;
         return false;
     }
-    static int dialogTheme() { return dark ? com.xiaoxiao2.pet.mobile.R.style.GlassDialogDark : com.xiaoxiao2.pet.mobile.R.style.GlassDialogLight; }
+    static int dialogTheme() { return dark ? com.xiaoxiao.pet.mobile.R.style.GlassDialogDark : com.xiaoxiao.pet.mobile.R.style.GlassDialogLight; }
     static int dp(Context c,int value) { return Math.round(c.getResources().getDisplayMetrics().density*value); }
     private static GradientDrawable rawShape(Context c,int color,int radius) {
         GradientDrawable d=color==PANEL||color==BACK?new GlassSurface(c,radius):new GradientDrawable(); d.setColor(color); d.setCornerRadius(dp(c,radius)); return d;
@@ -129,7 +129,7 @@ final class Apple {
     }
     static void dialog(Dialog d) {
         Window w=d.getWindow(); if(w==null)return;
-        if(UiMotion.enabled())w.setWindowAnimations(com.xiaoxiao2.pet.mobile.R.style.PanelMotion);
+        if(UiMotion.enabled())w.setWindowAnimations(com.xiaoxiao.pet.mobile.R.style.PanelMotion);
         w.setBackgroundDrawable(shape(d.getContext(),PANEL,24)); w.setDimAmount(.25f);
         w.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND); dialogs.put(d,true);
         bindDialogText(w.getDecorView());
@@ -182,7 +182,7 @@ final class Apple {
     static class Builder extends AlertDialog.Builder {
         final boolean glass;
         Builder(Context c) { this(c,true); }
-        Builder(Context c,boolean glass) { super(c,glass?(dark?com.xiaoxiao2.pet.mobile.R.style.GlassDialogDark:com.xiaoxiao2.pet.mobile.R.style.GlassDialogLight):dialogTheme());this.glass=glass; }
+        Builder(Context c,boolean glass) { super(c,glass?(dark?com.xiaoxiao.pet.mobile.R.style.GlassDialogDark:com.xiaoxiao.pet.mobile.R.style.GlassDialogLight):dialogTheme());this.glass=glass; }
         public AlertDialog create(){AlertDialog d=super.create();UiMotion.window(d.getWindow());return d;}
         public AlertDialog show() { AlertDialog d=super.show(); dialog(d);return d; }
     }

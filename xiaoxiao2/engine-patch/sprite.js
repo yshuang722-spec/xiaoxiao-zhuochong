@@ -61,8 +61,11 @@ class PetSprite {
     this.confineToScreen = pet.confineToScreen === true || config.confineToScreen === true;
     // 素材根按 assetRoot（文件宠物 = 配置文件前缀，多实例共享同一素材目录）或宠物 id 回落
     this.assetRoot = pet.assetRoot || pet.id;
-    this.clickSound = new Audio('./click-pop.wav');
-    this.clickSound.preload = 'auto'; this.clickSound.volume = 0.6;
+    this.roleId = pet.roleId || this.assetRoot;
+    this.traits = window.PetRoleTraits.resolve(this.roleId, pet.roleTraits);
+    // Short local click sound for the Pink Hair role and its clones.
+    this.clickSound = this.traits.clickSound ? new Audio('./click-pop.wav') : null;
+    if (this.clickSound) { this.clickSound.preload = 'auto'; this.clickSound.volume = 0.6; }
     this.assetBase = BASE + '/thumb/' + encodeURIComponent(this.assetRoot) + '/';
     this.front = 0; // 0 = A, 1 = B
     this.pending = null;
@@ -417,16 +420,25 @@ class PetSprite {
     }
     const gen = ++this.gen;
     this.pending = { anim: next, once: nextOnce, gen };
+    // The outgoing video must not end a newer request while it loads.
+    if (this.traits.handoff === 'layered') {
+      const outgoing = this.front === 0 ? this.videoA : this.videoB;
+      if (outgoing) outgoing.onended = null;
+    }
     this.logRuntime('动画请求', { animation: next, once: nextOnce, gen });
     const target = this.front === 0 ? this.videoB : this.videoA;
     const el = target;
     if (!el) return;
+    if (this.traits.handoff === 'layered') {
+      el.classList.remove('is-front');
+      el.style.zIndex = '1';
+    }
     // A refreshed fox window must not reuse an hour-old cached replacement clip.
     // Keep a stable revision within the window so ordinary playback still caches.
     const assetRevision = '?v=' + (this.assetRevision ??= Date.now());
     el.src = this.assetBase + encodeURIComponent(next) + (S.ANIMATION_EXT || '.webm') + assetRevision;
     el.loop = !nextOnce;
-    el.muted = true;
+    el.muted = !(this.traits.singingAudio && next === this.traits.singingAudio);
     el.autoplay = true;
     el.playsInline = true;
     el.onended = nextOnce ? () => this.handleEnded() : null;
@@ -453,22 +465,33 @@ class PetSprite {
       el.removeEventListener('loadeddata', onReady);
       if (gen !== this.gen || (this.pending && this.pending.gen !== gen)) return;
       const commitFrame = () => {
-        if(this.assetRoot==='character8' && this.pending?.gen!==gen)return;
+        if(this.traits.handoff === 'layered' && this.pending?.gen!==gen)return;
         if(gen !== this.gen || (this.pending && this.pending.gen !== gen))return;
         window.clearTimeout(loadTimer);
         el.onerror = null;
-        const canvasLayout = window.PetCanvasLayout?.apply(el, this.size, this.assetRoot, next);
+        const canvasLayout = window.PetCanvasLayout?.apply(el, this.size, this.assetRoot, next, this.traits);
       if (canvasLayout) this.logRuntime('画幅适配', { profile: canvasLayout.profile, canvasWidth: el.videoWidth, canvasHeight: el.videoHeight, scale: canvasLayout.scale });
       const old = this.front === 0 ? this.videoA : this.videoB;
-      if(this.assetRoot==='character8'){
+      if(this.traits.handoff === 'layered'){
         el.classList.add('seamless-handoff');
-        if(old)old.classList.add('seamless-handoff');
+        el.style.zIndex = '2';
+        if(old){ old.classList.add('seamless-handoff'); old.style.zIndex = '1'; }
       }
       el.classList.add('is-front');
       if (old && old !== el) {
-        old.classList.remove('is-front');
+        if (this.traits.handoff === 'layered') old.muted = true;
         old.onended = null;
-        old.pause();
+        if (this.traits.handoff === 'layered') {
+          // Keep the previous frame underneath while the compositor presents the new layer.
+          window.setTimeout(() => {
+            if (this.gen !== gen || (this.front === 0 ? this.videoA : this.videoB) === old) return;
+            old.classList.remove('is-front');
+            old.pause();
+          }, 120);
+        } else {
+          old.classList.remove('is-front');
+          old.pause();
+        }
       }
       this.front = this.front === 0 ? 1 : 0;
       this.pending = null;
@@ -484,7 +507,7 @@ class PetSprite {
       if (this.pendingMove) this.startMoveDrive(el);
 
       };
-      if(this.assetRoot==='character8'){
+      if(this.traits.handoff === 'layered'){
         // Retain the opaque old layer until the new decoder has submitted a frame.
         if(typeof el.requestVideoFrameCallback==='function')el.requestVideoFrameCallback(commitFrame);
         else requestAnimationFrame(()=>requestAnimationFrame(commitFrame));
@@ -500,7 +523,7 @@ class PetSprite {
     // fading video layers makes the desktop briefly show through every cycle.
     // Keep other pets and interaction/movement playback on their original path.
     const continuousIdle =
-      ['ojousama', 'character3'].includes(this.assetRoot) &&
+      this.traits.continuousIdle &&
       !this.animations.categories.some((c) => c.id === '小动作' && c.actions.length > 1) &&
       this.animations.idle.length === 1 &&
       name === this.animations.idle[0] &&
@@ -527,10 +550,47 @@ class PetSprite {
     this.stopMove();
     const { animations, animationWeights } = { animations: this.animations, animationWeights: this.weights };
     const smallActions = animations.categories.find((c) => c.id === '小动作')?.actions;
-    if ((this.assetRoot === 'ojousama' || /^character\d+$/.test(this.assetRoot)) && smallActions?.length && !this.workOn) {
+    if (this.traits.playlistIdle && smallActions?.length && !this.workOn) {
       // Rotate every small action, including the idle entry, without repeating
       // the same clip through a fade when the category contains only one item.
-      const next = smallActions[(smallActions.indexOf(this.anim) + 1) % smallActions.length];
+      let next;
+      const custom = this.playlist ?? (typeof window !== 'undefined' ? window.__yuyuPlaylist : null);
+      if (custom && custom.enabled === false) {
+        // 用户关闭了自动轮播：待机无缝循环，不再切换（重新开启时由 setPlaylist 调用 playIdle）
+        const hold = animations.idle[0];
+        if (!(this.anim === hold && !this.once && !this.dragState.active && !this.pendingMove && !this.moveRef)) {
+          this.anim = hold;
+          this.once = false;
+          this.switchTo(hold, false);
+        }
+        return;
+      }
+      if (custom && Array.isArray(custom.list)) {
+        // 用户自己排的轮播：按列表顺序走，列表里的名字必须是现有动作；同一个动作可以出现多次；空列表=只待机
+        const allowed = new Set([...animations.idle, ...smallActions]);
+        const list = custom.list.filter((n) => allowed.has(n));
+        if (!list.length) {
+          const hold = animations.idle[0];
+          if (!(this.anim === hold && !this.once)) {
+            this.anim = hold;
+            this.once = false;
+            this.switchTo(hold, false);
+          }
+          return;
+        }
+        this.playlistCursor = (((this.playlistCursor ?? -1) + 1) % list.length + list.length) % list.length;
+        next = list[this.playlistCursor];
+        this.logRuntime('自定义轮播', { index: this.playlistCursor + 1, total: list.length, animation: next });
+      } else if (this.traits.alternateIdle) {
+        // Alternate: idle clip first, then the next small action, then idle again.
+        const idleName = animations.idle[0];
+        const acts = smallActions.filter((n) => n !== idleName);
+        if (this.anim !== idleName || !acts.length) next = idleName;
+        else {
+          this.smallActionIndex = ((this.smallActionIndex ?? -1) + 1) % acts.length;
+          next = acts[this.smallActionIndex];
+        }
+      } else next = smallActions[(smallActions.indexOf(this.anim) + 1) % smallActions.length];
       if (S.isNoMirrorAnimation(animations.categories, next)) this.facing = 'left';
       this.playOnce(next);
       return;
@@ -563,13 +623,23 @@ class PetSprite {
     this.playOnce(next);
   }
 
+  // 用户编排的轮播列表（由 events.js 每秒同步；变化才进来）：{enabled, list|null}
+  setPlaylist(next) {
+    const before = this.playlist ?? { enabled: true, list: null };
+    this.playlist = next;
+    if (JSON.stringify(before.list) !== JSON.stringify(next.list)) this.playlistCursor = -1;
+    // 待机正无限循环（关闭轮播时的状态）：重新开启或列表变化后主动接上轮播链
+    const idleLooping = this.anim === this.animations.idle[0] && !this.once;
+    if (idleLooping && next.enabled !== false && !this.dragState.active && !this.workOn && !this.pendingMove && !this.moveRef) this.playIdle();
+  }
+
   handleEnded() {
     this.logRuntime('动画结束');
     if (this.dragState.active) return;
     const { animations } = { animations: this.animations };
     // Configured custom pets resume their own small-action playlist after interaction.
     if (
-      (this.assetRoot === 'ojousama' || /^character\d+$/.test(this.assetRoot)) &&
+      this.traits.playlistIdle &&
       !this.workOn &&
       animations.categories.some((c) => c.id === '小动作' && c.actions.length > 0)
     ) {
@@ -1251,8 +1321,10 @@ class PetSprite {
     }
     this.stopThrow(); // 点击飞行中的宠物 = 收手停住（再播点击回应）
     this.stopMove();
-    try { this.clickSound.currentTime=0; this.clickSound.play().catch(()=>{}); } catch (_) {}
     if (!this.animations.clicks.length) return;
+    if (this.clickSound) {
+      try { this.clickSound.currentTime = 0; this.clickSound.play().catch(() => {}); } catch (_) {}
+    }
     this.pendingSquash = true; // 等新点击动画切到前台后 Q 弹（压新首帧，与浏览器一致）
     this.playOnce(S.pick(this.animations.clicks));
   }

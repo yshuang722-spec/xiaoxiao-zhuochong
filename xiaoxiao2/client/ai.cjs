@@ -87,10 +87,10 @@ function createAI({service, safeStorage, fetchImpl = globalThis.fetch, onChanged
     if (!/^[a-zA-Z0-9_-]+$/.test(role.id)) throw Error('角色 ID 无效');
     const personaFile = path.join(role.project, '人设.json');
     let persona = read(personaFile, null);
-    if (persona && persona.characterId !== role.entry) throw Error('人设文件与角色目录不匹配，请检查角色 ID');
+    if (persona && ![role.entry, role.roleId].includes(persona.characterId)) throw Error('人设文件与角色目录不匹配，请检查角色 ID');
     if (!persona) {
       const local = read(path.join(role.project, 'config.json'), {});
-      persona = {whisperPrompt: local.whisperPrompt || (role.entry === 'main'
+      persona = {whisperPrompt: local.whisperPrompt || ((role.roleId || role.entry) === 'main'
         ? '你是主人桌面上的Q版蓝发小女仆，会时不时碎碎念一句。说话要自然随意、短短一句（20字以内），温柔乖巧带点俏皮，说人话不啰嗦，不要解释你自己，不要提你是AI。'
         : `你是主人桌面上的Q版${role.name}。说话自然随意、简短，不要解释你自己，不要提你是AI。`)};
     }

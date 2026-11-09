@@ -7,7 +7,7 @@ import android.view.animation.*;
 /** Short feedback only; respects Android's system animation switch. */
 final class UiMotion {
  static boolean enabled(){return ValueAnimator.areAnimatorsEnabled();}
- static void window(Window w){w.setWindowAnimations(enabled()?com.xiaoxiao2.pet.mobile.R.style.PanelMotion:0);}
+ static void window(Window w){w.setWindowAnimations(enabled()?com.xiaoxiao.pet.mobile.R.style.PanelMotion:0);}
  static void press(View view){view.setOnTouchListener((v,e)->{
   if(!enabled())return false;
   // Pressing sinks the button onto its edge; releasing springs it back up.

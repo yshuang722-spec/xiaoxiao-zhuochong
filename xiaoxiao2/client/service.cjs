@@ -23,10 +23,11 @@ function seedCharacters() {
     fs.cpSync(path.join(seedRoot,entry.name),dest,{recursive:true,errorOnExist:true,force:false});
   }
 }
+let PORT=3096;
 function request(route, method = 'GET', body) {
   return new Promise((resolve, reject) => {
     const data = body === undefined ? null : Buffer.from(JSON.stringify(body));
-    const req = http.request({hostname:'127.0.0.1', port:3096, path:route, method,
+    const req = http.request({hostname:'127.0.0.1', port:PORT, path:route, method,
       headers:data ? {'Content-Type':'application/json','Content-Length':data.length} : {}}, res => {
       const chunks=[];res.on('data', c=>chunks.push(c));res.on('end',()=>{
         try {const parsed=JSON.parse(Buffer.concat(chunks));if(res.statusCode>=400)throw Error(parsed.error||`HTTP ${res.statusCode}`);resolve(parsed);}catch(e){reject(e);}
@@ -37,9 +38,17 @@ function request(route, method = 'GET', body) {
 }
 async function ensureServer() {
   seedCharacters();
+  // 端口被别的程序占用（例如返回 HTTP 401）时，自动换下一个端口，不再直接报启动失败
+  let portFound=false;
+  for(let p=3096;p<=3106;p++){
+    PORT=p;
+    try{const h=await request('/health');if(h&&h.plugin&&path.resolve(h.plugin.root)===PACKAGE){portFound=true;break;}}
+    catch(e){if(['ECONNREFUSED','ECONNRESET'].includes(e.code)){portFound=true;break;}}
+  }
+  if(!portFound)throw Error('3096–3106 端口都被其他程序占用，请关闭占用端口的软件后重试');
   try {
     const health=await request('/health');
-    if(path.resolve(health.plugin.root)!==PACKAGE)throw Error('3096 端口正在被另一个版本使用');
+    if(path.resolve(health.plugin.root)!==PACKAGE)throw Error(PORT+' 端口正在被另一个版本使用');
     if(!chatBridgeEnvironment)return;
     // A host left behind after a client crash has an obsolete ephemeral bridge.
     await request('/shutdown','POST');
@@ -53,7 +62,7 @@ async function ensureServer() {
   const logDir=path.join(HOME,'pet-control-client/logs');fs.mkdirSync(logDir,{recursive:true});
   const out=fs.openSync(path.join(logDir,'server.stdout.log'),'a'),err=fs.openSync(path.join(logDir,'server.stderr.log'),'a');
   const env={...process.env,...chatBridgeEnvironment,DSH_HOME:HOME,LOCALAPPDATA:HOME};if(packaged){env.ELECTRON_RUN_AS_NODE='1';env.DSH_PET_ELECTRON_PATH=process.execPath;}else delete env.ELECTRON_RUN_AS_NODE;
-  const child=spawn(packaged ? process.execPath : path.join(process.env.ProgramFiles,'nodejs/node.exe'),[path.join(PACKAGE,'lib/standalone.js'),'--port','3096'],{cwd:PACKAGE,env,detached:true,windowsHide:true,stdio:['ignore',out,err]});
+  const child=spawn(packaged ? process.execPath : path.join(process.env.ProgramFiles,'nodejs/node.exe'),[path.join(PACKAGE,'lib/standalone.js'),'--port',String(PORT)],{cwd:PACKAGE,env,detached:true,windowsHide:true,stdio:['ignore',out,err]});
   let spawnError;child.on('error',e=>spawnError=e);child.unref();fs.closeSync(out);fs.closeSync(err);
   for(let i=0;i<40;i++){await new Promise(r=>setTimeout(r,250));if(spawnError)throw spawnError;try{const h=await request('/health');if(path.resolve(h.plugin.root)===PACKAGE)return;throw Error('启动了不匹配的服务');}catch(e){if(!['ECONNREFUSED','ECONNRESET'].includes(e.code))throw e;}}
   throw Error('桌宠服务未能启动，请重试或查看客户端日志');
@@ -69,14 +78,16 @@ async function list() {
     const preview=cfg.animations.idle[0];let file=path.join(projectDir(entry),'animations',preview+'.webm');
     if(entry==='main'&&!fs.existsSync(file)&&!fs.existsSync(path.join(projectDir(entry),'animations')))file=path.join(PACKAGE,'assets/webm',preview+'.webm');
     let poster='';const posterFile=path.join(__dirname,'assets',entry+'.png');if(fs.existsSync(posterFile))poster='data:image/png;base64,'+fs.readFileSync(posterFile).toString('base64');
-    roles.push({cloneCount:Math.max(0,cfg.pets.length-1),cloneLimit:8,isClone:pet.id!==cfg.pets[0].id&&/__clone_[1-8]$/.test(pet.id),id:pet.id,entry,name:pet.name||pet.id,visible:['desktop','both'].includes(pet.display),size:pet.size,actions:animationNames(cfg.animations),idle:preview,poster,project:entry==='main'&&!fs.existsSync(projectDir(entry))?path.join(HOME,'dsh-pet'):projectDir(entry),preview:fs.existsSync(file)?require('node:url').pathToFileURL(file).href:''});
+    roles.push({roleId:entry==='main'?(cfg.roleId||entry):entry,cloneCount:Math.max(0,cfg.pets.length-1),cloneLimit:8,isClone:pet.id!==cfg.pets[0].id&&/__clone_[1-8]$/.test(pet.id),id:pet.id,entry,name:pet.name||pet.id,visible:['desktop','both'].includes(pet.display),size:pet.size,actions:animationNames(cfg.animations),idle:preview,poster,project:entry==='main'&&!fs.existsSync(projectDir(entry))?path.join(HOME,'dsh-pet'):projectDir(entry),preview:fs.existsSync(file)?require('node:url').pathToFileURL(file).href:''});
   }
   return sortRoles(roles);
 }
+// 全局默认排列顺序（编号表顺序）：没手动排过序时按它排，新角色排在后面
+const GLOBAL_ORDER=['main','ojousama','character3','character4','character5','character6','character8','character9','character10','character11','character12','character13','character14','character15'];
 const ORDER_FILE=path.join(HOME,'pet-control-client','role-order.json');
 function readOrder(){try{const a=JSON.parse(fs.readFileSync(ORDER_FILE,'utf8'));return Array.isArray(a)?a.filter(x=>typeof x==='string'):[];}catch(e){return [];}}
 function made(entry){try{return fs.statSync(projectDir(entry)).birthtimeMs;}catch(e){return Infinity;}}
-function sortRoles(roles){const o=readOrder(),rank=r=>{const i=o.indexOf(r.entry);return i<0?1e6:i;};const born={};for(const r of roles)born[r.entry]??=made(r.entry);return roles.map((r,i)=>[r,i]).sort((a,b)=>rank(a[0])-rank(b[0])||born[a[0].entry]-born[b[0].entry]||a[1]-b[1]).map(x=>x[0]);}
+function sortRoles(roles){const o=readOrder(),rank=r=>{const i=o.indexOf(r.entry);if(i>=0)return i;const g=GLOBAL_ORDER.indexOf(r.roleId);return 1e6+(g<0?1e3:g);};const born={};for(const r of roles)born[r.entry]??=made(r.entry);return roles.map((r,i)=>[r,i]).sort((a,b)=>rank(a[0])-rank(b[0])||born[a[0].entry]-born[b[0].entry]||a[1]-b[1]).map(x=>x[0]);}
 async function reorder(entries){if(!Array.isArray(entries)||entries.some(x=>typeof x!=='string'||!/^[a-zA-Z0-9_-]+$/.test(x)))throw Error('排序数据无效');fs.mkdirSync(path.dirname(ORDER_FILE),{recursive:true});fs.writeFileSync(ORDER_FILE,JSON.stringify([...new Set(entries)]));return list();}
 async function find(id){const item=(await list()).find(r=>r.id===id);if(!item)throw Error('找不到这个角色，请刷新列表');return item;}
 let writes=Promise.resolve();
@@ -108,4 +119,46 @@ function physicsFiles(){const out=[];if(fs.existsSync(ROOT))for(const id of fs.r
 function readJson(file){return JSON.parse(fs.readFileSync(file,'utf8').replace(/^﻿/,'').replace(/^\s*\/\/.*$/gm,''));}
 function collision(){try{const files=physicsFiles();const main=files.find(f=>f.main);if(!main||readJson(main.file).physics?.petCollision!==true)return false;return files.every(f=>{const ph=readJson(f.file).physics;return !ph||ph.petCollision===true;});}catch(e){return false;}}
 function setCollision(on){const operation=writes.then(async()=>{for(const f of physicsFiles()){let cfg;try{cfg=readJson(f.file);}catch(e){continue;}if(!f.main&&!cfg.physics)continue;cfg.physics={...PHYSICS_DEFAULT,...(cfg.physics||{}),petCollision:on===true};fs.writeFileSync(f.file,JSON.stringify(cfg,null,2));}await request(base+'/reload','POST',{});return collision();});writes=operation.catch(()=>{});return operation;}
-module.exports={PACKAGE,HOME,ROOT,request,ensureServer,list,find,toggle,play,importProject,projectDir,setChatBridge,clone,resize,reorder,collision,setCollision};
+// 轮播编排：候选动作 = 角色全部动作去掉待机；已存的列表会按现有动作过滤；没存过时用「小动作」默认顺序
+const entryOk=entry=>typeof entry==='string'&&/^[a-zA-Z0-9_-]+$/.test(entry);
+async function playlist(entry='main') {
+  if(!entryOk(entry))throw Error('角色目录名无效');
+  const roles=await list();const main=roles.find(r=>r.entry===entry&&!r.isClone)||roles.find(r=>r.entry===entry);if(!main)throw Error('找不到角色');
+  const config=await request(base+'/config');const anims=(config[entry]||{}).animations||{};
+  const available=main.actions.slice();
+  const defaults=((anims.categories||[]).find(c=>c.id==='小动作')||{actions:[]}).actions.filter(n=>available.includes(n));
+  const saved=await request(base+'/playlist?entry='+encodeURIComponent(entry));
+  const ordered=(Array.isArray(saved.list)?saved.list:defaults).filter(n=>available.includes(n));
+  return {enabled:saved.enabled!==false,list:ordered,available,defaults,custom:Array.isArray(saved.list)};
+}
+function setPlaylist(entry,input) {
+  const operation=writes.then(async()=>{
+    if(!entryOk(entry)||!input||typeof input.enabled!=='boolean'||!Array.isArray(input.list))throw Error('轮播设置无效');
+    const current=await playlist(entry);const ok=new Set(current.available);
+    const list=input.list.filter(n=>typeof n==='string'&&ok.has(n)).slice(0,200);
+    await request(base+'/playlist?entry='+encodeURIComponent(entry),'POST',{enabled:input.enabled,list});
+    return playlist(entry);
+  });writes=operation.catch(()=>{});return operation;
+}
+// 动作分类：把角色的动作加进 待机/转向/拖拽/点击回应；待机里的原始待机动作固定保留
+const GROUP_KEYS=['idle','turn','drag','clicks'];
+async function groups(entry='main') {
+  if(!entryOk(entry))throw Error('角色目录名无效');
+  const roles=await list();const main=roles.find(r=>r.entry===entry&&!r.isClone)||roles.find(r=>r.entry===entry);if(!main)throw Error('找不到角色');
+  const available=main.actions.slice();const r=await request(base+'/groups?entry='+encodeURIComponent(entry));
+  const current={};for(const k of GROUP_KEYS)current[k]=((r.saved&&r.saved[k])||r.base[k]).filter(n=>available.includes(n));
+  return {available,base:r.base,groups:current,custom:!!r.saved,locked:r.base.idle[0]||''};
+}
+function setGroups(entry,input) {
+  const operation=writes.then(async()=>{
+    if(!entryOk(entry))throw Error('动作分类无效');
+    if(input===null){await request(base+'/groups?entry='+encodeURIComponent(entry),'POST',{groups:null});return groups(entry);}
+    const cur=await groups(entry);const ok=new Set(cur.available);const out={};
+    for(const k of GROUP_KEYS){const arr=Array.isArray(input?.[k])?input[k].filter((n,i,a)=>typeof n==='string'&&ok.has(n)&&a.indexOf(n)===i):[];
+      if(k==='idle'&&cur.locked&&!arr.includes(cur.locked))arr.unshift(cur.locked);
+      if(!arr.length)throw Error('每个分类至少要保留一个动作');out[k]=arr.slice(0,200);}
+    await request(base+'/groups?entry='+encodeURIComponent(entry),'POST',{groups:out});
+    return groups(entry);
+  });writes=operation.catch(()=>{});return operation;
+}
+module.exports={groups,setGroups,playlist,setPlaylist,PACKAGE,HOME,ROOT,request,ensureServer,list,find,toggle,play,importProject,projectDir,setChatBridge,clone,resize,reorder,collision,setCollision};

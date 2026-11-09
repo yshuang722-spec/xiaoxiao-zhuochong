@@ -126,7 +126,7 @@ header p{color:var(--ink-soft);font-size:14px}
 
 /* ---------- 角色卡里的待机动画（悬停时播放） ---------- */
 .portrait video.idle{max-width:none;width:auto;height:auto;object-fit:fill;opacity:0;transition:opacity .35s var(--ease);pointer-events:none}
-.portrait video.idle.contain{inset:0;width:100%;height:100%;object-fit:contain;transform:scale(1.25);transform-origin:50% 95%}
+.portrait video.idle.contain{inset:0;width:100%;height:100%;object-fit:contain;transform:scale(1.06);transform-origin:50% 95%}
 .portrait img.poster{transition:opacity .35s var(--ease)}
 .portrait.live video.idle{opacity:1}
 .portrait.live img.poster{opacity:0}
@@ -228,3 +228,39 @@ footer{border-top:2px dashed var(--line);color:var(--ink-soft)}
 .logo-view img{width:min(74vh,560px);height:auto;border-radius:56px;box-shadow:0 0 0 8px #fff,0 0 0 9px var(--line),0 12px 0 9px var(--edge),0 40px 90px #0006;cursor:default;user-select:none;-webkit-user-drag:none}
 @media(max-height:680px){.artemis-logo{width:84px;height:84px}.artemis-logo img{border-radius:20px}}
 @media(max-height:600px){.artemis-logo{display:none}}
+
+/* 动作下拉（贴纸风）：按钮与弹出层都用角色卡同一套描边、厚度和暖色 */
+.play-row .picker-btn{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;min-height:40px;background:#fff;color:var(--ink);border:2px solid var(--line);border-radius:12px;box-shadow:0 3px 0 var(--edge);font-weight:700;font-size:14px;text-align:left}
+.play-row .picker-btn:hover{border-color:#e9c9cc}
+.play-row .picker-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}
+.play-row .picker-btn[aria-expanded=true]{border-color:var(--grape);box-shadow:0 3px 0 #d8cdfa}
+.picker-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.picker-caret{flex:none;color:var(--ink-soft);font-size:13px;transition:transform .2s var(--ease)}
+.picker-btn[aria-expanded=true] .picker-caret{transform:rotate(180deg)}
+.picker-pop{position:fixed;z-index:50;overflow-y:auto;padding:6px;background:var(--card);border:2px solid var(--line);border-radius:16px;box-shadow:0 5px 0 var(--edge),0 14px 28px #3d2b3f26;opacity:0;transform:translateY(-4px) scale(.98);transform-origin:top center;transition:opacity .14s var(--ease),transform .18s var(--spring)}
+.picker-pop.show{opacity:1;transform:none}
+.picker-opt{display:flex;align-items:center;gap:8px;width:100%;min-height:36px;padding:6px 12px 6px 6px;border:0;border-radius:10px;background:transparent;color:var(--ink);font:inherit;font-weight:700;font-size:14px;text-align:left;cursor:pointer}
+.picker-opt+.picker-opt{margin-top:2px}
+.picker-opt:hover,.picker-opt:focus-visible{background:var(--orange-soft);color:var(--orange-deep);outline:0}
+.picker-opt.current{background:var(--mint-soft);color:var(--mint-deep)}
+.picker-mark{flex:none;width:18px;text-align:center;font-weight:900}
+.picker-opt-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+[data-mode=dark] .play-row .picker-btn,[data-mode=dark] .picker-pop{background:#1f1825;color:var(--ink);border-color:var(--line)}
+[data-mode=dark] .picker-opt{color:var(--ink)}
+
+/* 角色卡按钮：三列等宽网格，第一排管动作（查看/分类/轮播），第二排管角色（编辑/分身） */
+.character-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.character-actions button{width:100%;min-height:36px;padding:8px 4px;white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis}
+
+/* 角色卡直接拖动换位 */
+.drag-tip{font-size:12px;color:var(--muted,#70645b);align-self:center;margin-left:8px}
+#characters > .character[data-entry]{cursor:grab}
+#characters > .character button,#characters > .character select,#characters > .character a{cursor:pointer}
+.character.lifted{cursor:grabbing!important;box-shadow:0 0 0 1px var(--line),0 6px 0 var(--role-edge),0 22px 40px rgba(60,40,30,.28);opacity:.97}
+body.card-dragging,body.card-dragging *{cursor:grabbing!important;user-select:none}
+body.card-dragging #characters > .character:not(.lifted){transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+body.card-dragging .character video{pointer-events:none}
+@media(prefers-reduced-motion:reduce){.character.lifted{box-shadow:0 0 0 1px var(--line),0 6px 0 var(--role-edge)}}
+
+/* 窗口放大后一排放三张角色卡 */
+@media(min-width:1400px){#characters{grid-template-columns:repeat(3,minmax(0,1fr))}}
