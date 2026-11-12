@@ -14,7 +14,7 @@ const PLACE_FLING_SPEED = 1600;
 
 // ---------- 单只宠物（行为与浏览器 PetCard 一致；纯逻辑来自 src/shared） ----------
 class PetSprite {
-  constructor(pet) {
+  constructor(pet, savedPosition = null) {
     this.pet = pet; // 这只宠物的配置段（拍平后的成品实例，条目级字段已吹入：动画池/权重/周期）
     // 页面级缩放（main 对窗口 setZoomFactor(CONFIG.scale)，见 DESIGN.md §3.5）统一放大整窗：
     // pet.size 即 CSS 像素基准，**不再手工乘 CONFIG.scale**——固定 px UI（菜单/积分/聊天）
@@ -41,10 +41,21 @@ class PetSprite {
     // 但身体永不越界（漫游/拖拽都不会弄丢宠物）。与浏览器 overlay 的 sideAllow 同一套语义。
     this.sideAllow = (S.HIT_BOX.x0 / 640) * this.size;
     window.__dshPetDebug.sideAllow = this.sideAllow;
-    // 窗口四周外扩（= WINDOW_MARGIN_RATIO×宠物尺寸）：sprite 钉在 (margin.l, margin.t)，
-    // 窗口 = sprite + 四边余量——气泡/未来弹窗显示在余量里；余量透明且点击穿透
     const m = this.size * WINDOW_MARGIN_RATIO;
-    this.margin = { t: m, r: m, b: m, l: m };
+    this.restMargin = m;
+    this.assetRoot = pet.assetRoot || pet.id;
+    this.roleId = pet.roleId || this.assetRoot;
+    this.traits = window.PetRoleTraits.resolve(this.roleId, pet.roleTraits);
+    const layouts = [960, 1000].map(h => window.PetCanvasLayout.layout(1280, h, this.size, this.assetRoot, this.traits));
+    for (const clip of Object.values(this.traits.actionAlign || {})) {
+      layouts.push({ left: clip.left * this.size, top: clip.top * this.size });
+    }
+    const gutter = axis => Math.ceil(Math.max(0, ...layouts.map(box => -(box?.[axis] || 0))));
+    // A fixed origin prevents a previously painted frame from appearing at a new
+    // desktop position while Windows resizes the transparent surface.
+    // Allow room for the 220px chat panel and the tooltip above small pets.
+    this.margin = { t: Math.min(m, Math.max(64, gutter('top'))), r: m, b: m,
+      l: Math.min(m, Math.max(gutter('left'), 220 - this.halfW)) };
     window.__dshPetDebug.winMargin = this.margin;
     // 宠物包围盒左上角在【工作区】坐标系里的位置（本窗口的位置 = 宠物的位置）
     this.pos = { x: 0, y: 0 };
@@ -59,10 +70,6 @@ class PetSprite {
     // 抛掷锁定在当前屏幕（根字段；拍平已吹入实例，兜底回主条目/默认）：
     // true = 甩出去只在松手时所在那块屏内弹（屏缝当墙），false = 照常跨屏飞行
     this.confineToScreen = pet.confineToScreen === true || config.confineToScreen === true;
-    // 素材根按 assetRoot（文件宠物 = 配置文件前缀，多实例共享同一素材目录）或宠物 id 回落
-    this.assetRoot = pet.assetRoot || pet.id;
-    this.roleId = pet.roleId || this.assetRoot;
-    this.traits = window.PetRoleTraits.resolve(this.roleId, pet.roleTraits);
     // Short local click sound for the Pink Hair role and its clones.
     this.clickSound = this.traits.clickSound ? new Audio('./click-pop.wav') : null;
     if (this.clickSound) { this.clickSound.preload = 'auto'; this.clickSound.volume = 0.6; }
@@ -96,7 +103,7 @@ class PetSprite {
     this.moveRef = null;
     this.moveToken = 0;
     this.pendingMove = null;
-    this.customPos = null; // 拖拽后的会话内位置（{rx, ry} 比例）；restart 回角落
+    this.customPos = null; // Restored from the persisted physical center before the first positioning.
     // 右键菜单（统一自绘组件，两端共用同一份：树+渲染均来自 shared-core）
     this.menuOpen = false; // 菜单开启期间强制整窗可交互（悬停菜单不触发穿透翻转）
     this.menuClose = null; // 当前菜单的 close()（打开时挂载，关闭后置空）
@@ -147,6 +154,7 @@ class PetSprite {
     this.videoB = document.createElement('video');
     this.videoB.className = 'pet-video';
     for (const v of [this.videoA, this.videoB]) {
+      if (BRIDGE || this.physics.petCollision) v.crossOrigin = 'anonymous';
       v.muted = true;
       v.playsInline = true;
       v.autoplay = true;
@@ -161,6 +169,9 @@ class PetSprite {
     this.hit.setAttribute('aria-label', this.pet.name);
     this.bubble = document.createElement('div');
     this.bubble.className = 'pet-bubble';
+    // Keep tall speech and image bubbles inside the fixed top gutter.
+    this.bubble.style.transform = 'translate(-50%, max(0px, calc(100% - ' +
+      (this.margin.t + this.size * 0.108) + 'px)))';
     // 悬浮提示：与气泡同处 this.el 内的绝对定位浮层，位置/翻转由 renderTip 决定，
     // 样式走 shared 的 TOOLTIP_CSS（renderer.js 注入，与浏览器端同一份）
     this.tip = document.createElement('div');
@@ -174,6 +185,13 @@ class PetSprite {
     this.el.appendChild(this.tip);
     this.el.appendChild(stage);
     rootEl.appendChild(this.el);
+    if (savedPosition && Number.isFinite(savedPosition.cx) && Number.isFinite(savedPosition.cy)) {
+      const p = S.clampPointToRegion(AREAS, toLocal(savedPosition.cx) - VIEW.x, toLocal(savedPosition.cy) - VIEW.y);
+      this.customPos = { rx: p.x / VIEW.w, ry: p.y / VIEW.h };
+    }
+    this.collisionFrame = (BRIDGE || this.physics.petCollision) && window.petBridge?.setCollisionShape
+      ? new PetCollisionFrame(this.el, shape => { if (this.physics.petCollision) window.petBridge.setCollisionShape(shape); })
+      : null;
     this.position();
 
     // 事件（与浏览器同一套：pointerdown/move、click、window pointerup/cancel）
@@ -217,43 +235,21 @@ class PetSprite {
       { signal: ac.signal },
     );
 
-    // 宠物间碰撞（跨窗 broker）：订阅其它宠物状态广播（碰撞检测用）+ 「被撞」事件 → onDeskHit。
-    // 注意：退订由窗口销毁自然回收（webContents 销毁后 ipc 事件不再派发），无需显式取消。
-    this.others = {}; // petId -> {x,y,vx,vy,size,bottomPad}（其它宠物的最新状态，来自主进程广播）
-    this.throwState = null; // 飞行中的实时状态（被撞查询 / 其它窗碰撞检测时上报用）
-    this.pressScoreFired = false; // 按下瞬间已触发过积分（pointerdown 即触发；click 据此不重复弹，同浏览器）
-    this.lastFlightReport = 0;
-    if (window.petBridge && window.petBridge.onFlightStates) {
-      window.petBridge.onFlightStates((states) => {
-        if (!states || typeof states !== 'object') return;
-        const next = {};
-        for (const pid of Object.keys(states)) {
-          if (pid === this.pet.id) continue; // 排除自己
-          const s = states[pid];
-          next[pid] = {
-            // 碰撞 broker 协议单位是物理像素（与窗口 bounds 一致）：÷scale 进本窗口 CSS 系（§3.5）
-            x: toLocal(Number(s && s.x) || 0),
-            y: toLocal(Number(s && s.y) || 0),
-            vx: toLocal(Number(s && s.vx) || 0),
-            vy: toLocal(Number(s && s.vy) || 0),
-            size: toLocal(Number(s && s.size) || 0),
-            bottomPad: toLocal(Number(s && s.bottomPad) || 0),
-          };
-        }
-        this.others = next;
-      });
-      window.petBridge.onPetHit((payload) => {
-        const vx = Number(payload && payload.vx);
-        const vy = Number(payload && payload.vy);
-        if (Number.isFinite(vx) && Number.isFinite(vy)) {
-          this.logRuntime('角色碰撞', { peer: String(payload.peer || ''), vx, vy, dx: Number(payload.dx) || 0, dy: Number(payload.dy) || 0 });
-          this.onDeskHit(toLocal(vx), toLocal(vy), toLocal(Number(payload.dx) || 0), toLocal(Number(payload.dy) || 0));
-        }
-      });
-    }
+    this.throwState = null;
+    this.pressScoreFired = false;
+    this.unsubscribeHit = window.petBridge?.onPetHit?.(payload => {
+      if (!Number.isFinite(payload?.vx) || !Number.isFinite(payload?.vy)) return;
+      this.logRuntime('角色碰撞', { peer: String(payload.peer || ''), vx: payload.vx, vy: payload.vy, dx: payload.dx, dy: payload.dy });
+      const x = Number.isFinite(payload.x) ? toLocal(payload.x) : this.pos.x + toLocal(payload.dx || 0);
+      const y = Number.isFinite(payload.y) ? toLocal(payload.y) : this.pos.y + toLocal(payload.dy || 0);
+      this.onDeskHit(toLocal(payload.vx), toLocal(payload.vy), x, y);
+    });
   }
 
   dispose() {
+    this.unsubscribeHit?.();
+    this.collisionFrame?.stop();
+    this.collisionFrame?.updateLayout();
     this.mediaGuard?.stop();
     this.logRuntime('角色销毁');
     if (this.playbackGuard) window.clearInterval(this.playbackGuard);
@@ -269,7 +265,7 @@ class PetSprite {
       this.chatClose = null;
     }
     this.closeMenu();
-    this.stopThrow();
+    this.stopThrow(false);
     this.stopDragFollow();
     this.stopSquash();
     this.stopMove();
@@ -281,12 +277,33 @@ class PetSprite {
   // setContentBounds 要**屏幕**坐标：pos 是视口（桌面外接矩形）相对坐标，先加 VIEW.x/y
   // 再统一 ×scale 回物理像素（§3.5 IPC 收口）——主进程收到的数字与线性化旧行为逐位一致，
   // 主进程侧（bounds/去重/碰撞 broker）完全不用改。
-  sendBounds(px, py) {
-    this.pos = { x: Math.round(px), y: Math.round(py) };
+  sendBounds(px, py, ceilingContact = false) {
+    const frame = this.collisionFrame;
+    const front = this.front === 0 ? this.videoA : this.videoB;
+    if (!this.physics.petCollision && frame) {
+      if (this.throwState && frame.video !== front && front.readyState >= 2) frame.watch(front);
+      else if (!this.throwState && frame.video) frame.stop();
+    }
+    const compact = this.throwState && !this.inputBusy() && !this.bubbleOn && !this.tipOn && !this.whisperOn && !this.workOn;
+    if (compact && frame?.paint) {
+      const hit = this.hitRect, ink = frame.paint;
+      const old = frame.previousPaint && performance.now() < frame.handoffUntil ? frame.previousPaint : ink;
+      const right = Math.max(hit.x + hit.w, ink.right, old.right), bottom = Math.max(hit.y + hit.h, ink.bottom, old.bottom);
+      const guard = Math.ceil(this.size * 0.035) + 2;
+      const crop = this.flightCrop || {right:-Infinity,bottom:-Infinity};
+      if (right > crop.right - 2) crop.right = Math.ceil(right + guard);
+      if (bottom > crop.bottom - 2) crop.bottom = Math.ceil(bottom + guard);
+      this.flightCrop = crop;
+    } else this.flightCrop = null;
+    const crop = this.flightCrop, pad = this.restMargin;
+    const left = this.margin.l, top = this.margin.t;
+    this.margin.r = crop ? crop.right - this.size : pad;
+    this.margin.b = crop ? crop.bottom - this.winH : pad;
+    this.pos = this.throwState ? { x: px, y: py } : { x: Math.round(px), y: Math.round(py) };
+    this.customPos = { rx: (this.pos.x + this.halfW) / VIEW.w, ry: (this.pos.y + this.halfH) / VIEW.h };
     window.__dshPetDebug.dragPos = { x: this.pos.x, y: this.pos.y };
     if (window.petBridge) {
-      // 完整状态一次捎带：size/bottomPad 让静止宠物从首帧起就登记进碰撞站场
-      // （此前只有 report-flight 带尺寸，从没飞过的宠物 size=0 被碰撞检测直接跳过）；
+      // 静止宠物也登记尺寸与位置，让其它窗口能撞到它。
       // vx/vy 带当前速度——飞行中实时值、静止/拖拽 = 0，避免落地后残留上次飞行速度干扰碰撞动量。
       const fly = this.throwState;
       window.petBridge.setBounds(
@@ -302,6 +319,7 @@ class PetSprite {
         fly ? toScreen(fly.vy) : 0,
         !!this.physics?.petCollision,
         !!fly,
+        toScreen(left), toScreen(top), ceilingContact,
       );
     }
     // 位置变了（宠物漫游/拖拽/飞行，窗口跟着动）：提示若正显示必须重摆一次——它跟的是光标，
@@ -347,7 +365,17 @@ class PetSprite {
   throwSpaceOf() {
     if (!this.space || this.space.areas !== AREAS || this.space.panels !== PANELS) {
       this.space = S.throwSpace({ areas: AREAS, panels: PANELS, size: this.size, sideAllow: this.sideAllow });
-      for (const b of this.space.bounds) b.minY -= this.size * CONFIG.topInsetRatio;
+      this.space.ceilingInset = null;
+    }
+    const frame = this.collisionFrame;
+    let inset = frame?.contactTop ?? this.hitRect.y;
+    if (frame?.previousVideo && frame.previousContactTop != null && performance.now() < frame.handoffUntil &&
+        Number(getComputedStyle(frame.previousVideo).opacity) > 0) {
+      inset = Math.min(inset, frame.previousContactTop);
+    }
+    if (inset !== this.space.ceilingInset) {
+      this.space.bounds.forEach((b, i) => { b.minY = AREAS[i].y - inset; });
+      this.space.ceilingInset = inset;
     }
     return this.space;
   }
@@ -496,6 +524,7 @@ class PetSprite {
       this.front = this.front === 0 ? 1 : 0;
       this.pending = null;
       el.style.transform = this.facing === 'right' ? 'scaleX(-1)' : '';
+      if (this.physics.petCollision || this.throwState) this.collisionFrame?.watch(el);
       el.play().catch(() => {});
       this.logRuntime('动画开始', { animation: next, once: nextOnce, duration: Number.isFinite(el.duration) ? el.duration : 0 });
       this.watchPlayback(el, gen);
@@ -827,13 +856,16 @@ class PetSprite {
   /** 停止抛掷（空中被抓/点菜单/回家时立即定格在当前落点）。
    *  同时清速度状态 throwState——否则「抓住后温柔放下」会残留最后一次飞行速度，
    *  静止的宠物点一下就误判为飞行中。点击积分用的飞行动态由 onPointerDown 提前记录。 */
-  stopThrow() {
+  stopThrow(reportStop = true) {
     this.throwToken++;
     if (this.throwRef !== null) {
       cancelAnimationFrame(this.throwRef);
       this.throwRef = null;
     }
-    this.throwState = null;
+    if (this.throwState) {
+      this.throwState = null;
+      if (reportStop) this.sendBounds(this.pos.x, this.pos.y);
+    }
   }
 
   /** 抛掷驱动：重力 + 边缘反弹 + 落地摩擦，落定后写入 customPos */
@@ -843,66 +875,33 @@ class PetSprite {
     // 边界 = 显示器工作区**并集**：空洞是墙（宠物再也飞不进不可见区域），屏缝不是墙（跨屏弹跳照旧）
     // confineToScreen 开启时改为锁定**松手这一刻所在的那块屏**：屏缝同样当墙，只在目标屏内弹。
     // 锁定屏在抛掷开始时定下、飞行途中不重取；relayout 改了屏数时由 throwStepRegion 退回不锁定。
+    const video = this.front === 0 ? this.videoA : this.videoB;
+    if (this.collisionFrame && this.collisionFrame.video !== video && video.readyState >= 2) {
+      this.collisionFrame.watch(video);
+    }
     const lockScreen = this.confineToScreen ? S.screenOfBox(this.throwSpaceOf(), px, py) : -1;
     const token = ++this.throwToken;
-    let state = { x: px, y: py, vx, vy };
-    let last = performance.now();
+    this.throwState = { x: px, y: py, vx, vy };
+    this.throwTime = performance.now();
     let prevGrounded = false; // 落地 Q 弹：只在空中→地面转换帧触发一次
     const step = () => {
       if (this.throwToken !== token) return;
       const now = performance.now();
-      const dt = (now - last) / 1000;
-      last = now;
+      const state = this.throwState;
+      const dt = (now - this.throwTime) / 1000;
+      this.throwTime = now;
       const fallingVy = state.vy; // 本帧积分前的竖直速度（正=下落）：即落地冲击速度
       // 每帧重取：显示器变化时 relayout() 会让缓存失效，res.screen 必须与这一份对应
       const sp = this.throwSpaceOf();
       const res = S.throwStepRegion(state, dt, sp, this.physics, lockScreen);
-      state = { x: res.x, y: res.y, vx: res.vx, vy: res.vy };
-      this.throwState = state;
-      // 上报飞行状态（节流 ~30ms）：主进程 broker 汇聚后广播，其它窗口用它做跨窗碰撞检测；
-      // broker 协议单位 = 物理像素，这里 ×scale（§3.5 收口）
-      if (window.petBridge && window.petBridge.reportFlight && now - this.lastFlightReport > 30) {
-        window.petBridge.reportFlight({
-          x: toScreen(state.x),
-          y: toScreen(state.y),
-          vx: toScreen(state.vx),
-          vy: toScreen(state.vy),
-          size: toScreen(this.size),
-          bottomPad: toScreen(this.bottomPad),
-          enabled: !!this.physics?.petCollision,
-          flying: true,
-        });
-        this.lastFlightReport = now;
-      }
-      // 宠物间碰撞（仅 petCollision 开启）：飞行中的自己撞到其它宠物 → 动量弹开
-      if (this.physics && this.physics.petCollision) {
-        const myBody = S.bodyPixelBox({ x: state.x, y: state.y, size: this.size, bottomPad: this.bottomPad });
-        for (const pid of Object.keys(this.others)) {
-          const o = this.others[pid];
-          if (!o || !o.size) continue;
-          const otherBody = S.bodyPixelBox({ x: o.x, y: o.y, size: o.size, bottomPad: o.bottomPad });
-          if (!S.rectsOverlap(myBody, otherBody)) continue;
-          const hit = S.collidePet(
-            { x: state.x, y: state.y, vx: state.vx, vy: state.vy, size: this.size },
-            { x: o.x, y: o.y, vx: o.vx, vy: o.vy, size: o.size },
-          );
-          if (hit) {
-            // 飞行方：按动量结果继续弹开；被撞方：主进程转发给目标窗口 → 目标窗 startThrow
-            state.vx = hit.fvx;
-            state.vy = hit.fvy;
-            this.throwState = state;
-            if (window.petBridge && window.petBridge.reportCollide) {
-              // 被撞方初速同为 broker 物理像素协议：×scale（§3.5 收口）
-              window.petBridge.reportCollide(pid, toScreen(hit.hvx), toScreen(hit.hvy));
-            }
-            break; // 一帧只处理一次碰撞（避免连锁触发抖动）
-          }
-        }
-      }
-      this.sendBounds(res.x, res.y);
+      // One movement report per displayed frame. The broker combines it with
+      // this video's current silhouette for both local and cross-process pets.
+      this.throwState = res.atRest ? null : { x: res.x, y: res.y, vx: res.vx, vy: res.vy };
+      const curBounds = sp.bounds[res.screen];
+      const ceilingContact = res.bounced && fallingVy < 0 && res.vy >= 0 && res.y === curBounds?.minY;
+      this.sendBounds(res.x, res.y, ceilingContact);
       // 落地 Q 弹：只在空中→地面转换帧触发一次，力度随冲击速度（轻落 0.8 ~ 重砸 0.55）。
       // 「地面」是**当前所在屏**的底边——多屏各有各的地面高度
-      const curBounds = sp.bounds[res.screen] || sp.bounds[0];
       const grounded = curBounds ? res.y >= curBounds.maxY - 1 : false;
       if (res.bounced && grounded && !prevGrounded) {
         const frontEl = this.front === 0 ? this.videoA : this.videoB;
@@ -922,12 +921,19 @@ class PetSprite {
   }
 
   /** 被撞回调（跨窗碰撞 broker 转发）：停当前动作，从落点以新初速抛出去（全复用现有物理） */
-  onDeskHit(vx, vy, dx = 0, dy = 0) {
-    if (this.dragState.active) return;
-    this.stopMove();
-    this.stopDragFollow();
-    this.stopThrow();
-    this.startThrow(this.pos.x + dx, this.pos.y + dy, vx, vy);
+  onDeskHit(vx, vy, x = this.pos.x, y = this.pos.y) {
+    if (this.dragState.active || !this.physics.petCollision) {
+      this.sendBounds(this.pos.x, this.pos.y);
+      return;
+    }
+    // Keep a flying pet's existing frame callback, ground state and display lock.
+    if (this.throwRef !== null && this.throwState) {
+      this.throwState = { x, y, vx, vy };
+      this.throwTime = performance.now();
+    } else {
+      this.startThrow(x, y, vx, vy);
+    }
+    this.sendBounds(x, y);
   }
 
   /** Q 弹挤压：前台视频垂直压扁（贴地锚定，transform-origin:bottom）再回弹；
@@ -953,6 +959,7 @@ class PetSprite {
         // 恢复纯镜像（若期间 switchTo 重置过 transform，也以镜像为准）
         el.style.transform = this.facing === 'right' ? 'scaleX(-1)' : '';
       }
+      this.collisionFrame?.updateLayout();
     };
     this.squashRef = requestAnimationFrame(step);
   }
@@ -1003,10 +1010,12 @@ class PetSprite {
             ' -> +' +
             S.clickScore(grabSpeed, this.size),
         );
-        S.spawnScoreBurst(e.clientX, e.clientY);
+        const scoreX = e.clientX;
+        const scoreY = e.clientY;
+        S.spawnScoreBurst(scoreX, scoreY);
         S.mountScorePopup({
-          x: e.clientX,
-          y: e.clientY,
+          x: scoreX,
+          y: scoreY,
           score: S.clickScore(grabSpeed, this.size),
           speed: grabSpeed,
           size: this.pet.size,
@@ -1057,6 +1066,7 @@ class PetSprite {
       d.dragging = true;
       // 真正开始拖拽才把舞台拍平（人物随光标拿起；与浏览器 dragging 语义一致）
       this.stage.style.transform = 'none';
+      this.collisionFrame?.updateLayout();
       if (this.animations.drag.length) {
         this.playOnce(S.pick(this.animations.drag));
       }
@@ -1081,6 +1091,7 @@ class PetSprite {
     this.hit.classList.remove('dragging');
     this.stopDragFollow(); // 弹簧跟随立即停（位置定格在实时 this.pos）
     this.stage.style.transform = 'translateY(' + this.bottomPad + 'px)';
+    this.collisionFrame?.updateLayout();
     this.syncInputBusy(); // 拖拽结束：交还给常规判定（幂等，非拖拽时多调一次不发 IPC）
     // 提示复位：点击/拖拽期间收起的悬浮提示，指针仍在命中区内就恢复（与浏览器 handlePointerUp 同一处理）。
     // 用 hitRect 几何判定而不是 getBoundingClientRect：命中区是窗口坐标里的权威几何，与 onMouseMove 同源。
@@ -1361,6 +1372,7 @@ class PetSprite {
     const d = this.dragState;
     if (d.active || d.dragging || this.justDragged || this.menuOpen) return;
     e.preventDefault();
+    const pointerX = e.clientX - this.margin.l, pointerY = e.clientY - this.margin.t;
     this.stopThrow(); // 菜单弹出前停住飞行中的宠物
     this.stopMove(); // 菜单悬停期间宠物不漫游
     // 桌面专属工具根项（打开网站 / 查看余额 / 碎碎念 / 对话 / 回到初始位置 / 重载配置）+ 共享菜单树（动作→分类→具体动画）
@@ -1380,8 +1392,8 @@ class PetSprite {
     window.__dshPetDebug.menuOpen = true;
     const m = S.mountContextMenu({
       tree,
-      x: e.clientX,
-      y: e.clientY,
+      x: pointerX + this.margin.l,
+      y: pointerY + this.margin.t,
       // 只允许在「窗口 ∩ 工作区」内显示：宠物贴边时外扩余量伸出屏幕，菜单走进那里会被 OS 裁掉（#41）
       clamp: this.visibleClampRect(),
       onAction: (leaf) => this.onMenuAction(leaf),
