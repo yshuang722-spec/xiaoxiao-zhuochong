@@ -117,12 +117,9 @@ if (!DPI_PROBE && HOST_PID > 0) {
   }, HOST_POLL_MS).unref?.();
 }
 
-// Windows 透明分层窗口（WS_EX_LAYERED）在 DWM 硬件加速合成下存在多处缺陷：
-//   - 拖拽移动时窗口四周出现黑色边框（#37）
-//   - 大透明窗移动覆盖小透明窗时，被覆盖窗口内容丢失（显示"消失"）
-// 本进程只渲染轻量宠物动画（640×360），改走软件合成以规避上述缺陷，
-// 不影响浏览器形态与主 DSH（独立进程）；非 Windows（macOS/Linux）合成路径不同，保留硬件加速。
-if (process.platform === 'win32') {
+// Use GPU composition for large moving pets. Older Windows drivers can opt into
+// software composition if transparent windows develop borders or disappear.
+if (process.platform === 'win32' && process.env.DSH_PET_SOFTWARE_RENDERING === '1') {
   app.disableHardwareAcceleration();
 }
 

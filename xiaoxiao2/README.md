@@ -39,6 +39,7 @@
 - `engine-patch/`：电脑版引擎补丁。退出桌宠后，将 `standalone.js` 复制到安装目录的 `resources/engine/lib/`，将其余文件复制到 `resources/engine/runtime/electron-helper/`，然后重新启动桌宠。
   - 宠物按当前动画的可见轮廓碰撞。高速抛掷会检查两次位置更新之间的路径，撞到屏幕顶部时按角色头顶回弹。
   - Windows 飞行窗口按所在显示器的刷新率移动。缩放透明窗口时固定角色的位置，贴近任务栏反弹时也能保持画面稳定。
+  - Windows 版桌宠默认启用硬件加速，显卡由系统选择。如果透明窗口出现黑边或重叠时角色消失，可将环境变量 `DSH_PET_SOFTWARE_RENDERING` 设为 `1`，完全退出并重新启动桌宠以使用软件渲染。
   - `flight-presenter.exe` 随补丁提供。要从源码重新构建，在 Windows PowerShell 的 `engine-patch` 目录运行 `& "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe" /nologo /optimize+ /target:winexe /out:flight-presenter.exe flight-presenter.cs`。
 - `android/`：手机版源码（不含角色视频素材），构建方法见 [android/BUILD.md](android/BUILD.md)。
 
